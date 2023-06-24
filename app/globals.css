@@ -16,6 +16,10 @@ html {
   margin: auto;
 }
 
+.code-block {
+  position: relative;
+}
+
 /* disabling word wrap */
 .ProseMirror code {
   width: max-content;
