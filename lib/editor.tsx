@@ -64,6 +64,7 @@ const CodeBlockComponent: React.FC<CodeBlockComponentProps> = (props) => {
     updateAttributes,
     extension,
   } = props;
+  const { isEditingMode } = useBlogContext();
   return (
     <NodeViewWrapper className="code-block">
       <Select
@@ -80,6 +81,7 @@ const CodeBlockComponent: React.FC<CodeBlockComponentProps> = (props) => {
         right={0}
         m="md"
         w={120}
+        readOnly={!isEditingMode}
         variant="filled"
         color="red"
         onChange={(value) => updateAttributes({ language: value })}
