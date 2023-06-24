@@ -12,6 +12,13 @@ html {
 
 .ProseMirror img {
   border-radius: 5px;
+  display: block;
   margin: auto;
-  width: fit-content;
+}
+
+/* disabling word wrap */
+.ProseMirror code {
+  width: max-content;
+  overflow-x: hidden;
+  white-space: pre;
 }

@@ -32,7 +32,7 @@ export default function DashboardHeader() {
     try {
       const { id } = await mutateAsync();
       router.refresh();
-      router.push(`/dashboard/blog/${id}`);
+      router.push(`/dashboard/blog/${id}?type=edit`);
     } catch (err) {
       //
     }

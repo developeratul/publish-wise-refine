@@ -29,17 +29,10 @@ export function useBaseEditor(props?: Omit<Partial<EditorOptions>, "extensions">
       Superscript,
       SubScript,
       Highlight,
-      Image.configure({
-        HTMLAttributes: {
-          style: "margin: auto; display: block",
-        },
-      }),
+      Image,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Start writing..." }),
     ],
-    onDestroy(props) {
-      console.log(props);
-    },
     ...props,
   });
   return editor;

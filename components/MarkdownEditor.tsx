@@ -6,7 +6,7 @@ export default function MarkdownEditor(props: { editor: Editor | null; isEditing
   const { editor, isEditingMode = true } = props;
   if (!editor) return <></>;
   return (
-    <RichTextEditor mih="70vh" editor={editor}>
+    <RichTextEditor w="100%" mih="70vh" editor={editor}>
       {isEditingMode && (
         <RichTextEditor.Toolbar sticky stickyOffset={70}>
           <RichTextEditor.ControlsGroup>

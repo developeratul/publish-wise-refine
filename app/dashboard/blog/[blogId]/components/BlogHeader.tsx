@@ -33,7 +33,7 @@ export default function BlogHeader() {
           {blog.title}
         </Text>
       </Breadcrumbs>
-      <Group spacing="xl">
+      <Group noWrap spacing="xl">
         <BlogSavingStatus />
         <Menu withArrow>
           <Menu.Target>
