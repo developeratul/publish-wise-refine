@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 1px solid #4dabf7;
+}
+
+.ProseMirror img {
+  border-radius: 5px;
+  margin: auto;
+  width: fit-content;
+}
