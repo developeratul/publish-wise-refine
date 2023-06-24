@@ -37,6 +37,9 @@ export function useBaseEditor(props?: Omit<Partial<EditorOptions>, "extensions">
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Start writing..." }),
     ],
+    onDestroy(props) {
+      console.log(props);
+    },
     ...props,
   });
   return editor;

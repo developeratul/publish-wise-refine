@@ -1,6 +1,7 @@
 "use client";
 import MarkdownEditor from "@/components/MarkdownEditor";
 import { useBaseEditor } from "@/lib/editor";
+import React from "react";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogContent() {
@@ -12,5 +13,10 @@ export default function BlogContent() {
       form.setFieldValue("content", editor.getHTML());
     },
   });
+  React.useEffect(() => {
+    if (editor) {
+      editor.setOptions({ editable: isEditingMode });
+    }
+  }, [editor, isEditingMode]);
   return <MarkdownEditor isEditingMode={isEditingMode} editor={editor} />;
 }
