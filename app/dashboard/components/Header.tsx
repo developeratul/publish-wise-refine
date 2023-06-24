@@ -39,7 +39,7 @@ export default function DashboardHeader() {
   };
 
   return (
-    <Group position="apart" align="center">
+    <Group spacing="xs" position="apart" align="center">
       <Stack>
         <Title order={2}>Welcome back, {user?.user_metadata.firstName}</Title>
       </Stack>

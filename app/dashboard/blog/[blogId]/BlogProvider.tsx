@@ -5,7 +5,7 @@ import { AppProps, Blog } from "@/types";
 import { UseFormReturnType, useForm } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { toast } from "react-hot-toast";
 
@@ -14,6 +14,7 @@ interface BlogContextInitialState {
   form: UseFormReturnType<BlogEditForm>;
   isSaving: boolean;
   isSavingSuccess: boolean;
+  isEditingMode: boolean;
 }
 
 const BlogContext = React.createContext<BlogContextInitialState | undefined>(undefined);
@@ -33,6 +34,9 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
   });
   const [debouncedValues] = useDebouncedValue(form.values, 1000);
   const [isFirstTime, setFirstTime] = React.useState(true);
+  const searchParams = useSearchParams();
+  const isEditingMode = searchParams.get("type") === "edit";
+
   const { mutateAsync, isLoading, isSuccess } = useMutation({
     mutationFn: async (values: BlogEditForm) => {
       const { error, data } = await supabaseClient
@@ -64,7 +68,8 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
   // * Autosave the changes
   React.useEffect(() => {
     // When the page renders for the first time, don't save
-    if (!isFirstTime) {
+    // And only if its in editing mode
+    if (!isFirstTime && isEditingMode) {
       saveBlogChanges(debouncedValues);
     }
     setFirstTime(false);
@@ -81,7 +86,9 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
   }, [router]);
 
   return (
-    <BlogContext.Provider value={{ blog, form, isSaving: isLoading, isSavingSuccess: isSuccess }}>
+    <BlogContext.Provider
+      value={{ blog, form, isSaving: isLoading, isSavingSuccess: isSuccess, isEditingMode }}
+    >
       {children}
     </BlogContext.Provider>
   );

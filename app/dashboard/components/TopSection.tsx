@@ -5,7 +5,7 @@ import DashboardStats from "./Stats";
 
 export default function DashboardTopSection() {
   return (
-    <Stack>
+    <Stack spacing="xl">
       <DashboardHeader />
       <DashboardStats />
     </Stack>

@@ -18,7 +18,7 @@ export default function DashboardProvider(
   const { children, user, blogs } = props;
   return (
     <DashboardContext.Provider value={{ user, blogs }}>
-      <Container size="xl">
+      <Container size="xl" p={0}>
         <Stack spacing={50}>{children}</Stack>
       </Container>
     </DashboardContext.Provider>

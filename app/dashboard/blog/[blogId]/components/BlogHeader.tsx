@@ -16,7 +16,7 @@ import Link from "next/link";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogHeader() {
-  const { blog } = useBlogContext();
+  const { blog, isEditingMode } = useBlogContext();
   const { openDeleteBlogModal } = useDeleteBlogContext();
 
   const handleDeleteDraft = () => {
@@ -24,12 +24,14 @@ export default function BlogHeader() {
   };
 
   return (
-    <Group position="apart" mb="xl">
+    <Group display="flex" spacing="xl" noWrap position="apart" mb="xl">
       <Breadcrumbs>
         <Anchor component={Link} href="/dashboard">
           Blogs
         </Anchor>
-        <Text lineClamp={1}>{blog.title}</Text>
+        <Text sx={{ whiteSpace: "normal" }} lineClamp={1}>
+          {blog.title}
+        </Text>
       </Breadcrumbs>
       <Group spacing="xl">
         <BlogSavingStatus />
@@ -40,6 +42,23 @@ export default function BlogHeader() {
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
+            {isEditingMode ? (
+              <Menu.Item
+                icon={<Icon name="IconBook" />}
+                component={Link}
+                href={`/dashboard/blog/${blog.id}`}
+              >
+                Reading mode
+              </Menu.Item>
+            ) : (
+              <Menu.Item
+                icon={<Icon name="IconEdit" />}
+                component={Link}
+                href={{ pathname: `/dashboard/blog/${blog.id}`, search: "type=edit" }}
+              >
+                Edit
+              </Menu.Item>
+            )}
             <Menu.Item onClick={handleDeleteDraft} color="red" icon={<Icon name="IconTrash" />}>
               Delete draft
             </Menu.Item>

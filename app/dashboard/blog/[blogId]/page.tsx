@@ -13,7 +13,7 @@ interface PageProps {
 
 /**
  * // TODO: Image upload and insert in Blog
- * TODO: Separation between edit and view blog
+ * // TODO: Separation between edit and view blog
  */
 export default async function BlogDetailsByIdPage(props: PageProps) {
   const {

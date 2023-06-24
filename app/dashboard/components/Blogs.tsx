@@ -1,5 +1,6 @@
 "use client";
 import Icon from "@/components/Icon";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { formatDate } from "@/lib/utils";
 import { AppProps, Blog, BlogStatus } from "@/types";
 import {
@@ -10,11 +11,9 @@ import {
   Group,
   Image,
   Menu,
-  Select,
   SimpleGrid,
   Stack,
   Text,
-  TextInput,
   Title,
 } from "@mantine/core";
 import Link from "next/link";
@@ -23,23 +22,20 @@ import { useDeleteBlogContext } from "../providers/delete-blog";
 
 export default function DashboardBlogsSection() {
   const { blogs } = useDashboardContext();
+  const { isOverSm, isOverXl, isOverXs } = useMediaQuery();
   return (
     <Stack>
       <Group position="apart">
         <Title order={2}>Your blogs ({blogs.length})</Title>
-        <Group>
-          <TextInput placeholder="Search..." type="search" />
-          <Select
-            placeholder="Sort by"
-            value="latest"
-            data={[
-              { label: "Oldest", value: "oldest" },
-              { label: "Latest", value: "latest" },
-            ]}
-          />
-        </Group>
+        <Group></Group>
       </Group>
-      <SimpleGrid cols={4}>
+      {/**
+       * Base 1
+       * over Xs 2
+       * over Sm 3
+       * over xl 4
+       */}
+      <SimpleGrid cols={isOverXs ? (isOverSm ? (isOverXl ? 4 : 3) : 2) : 1}>
         {blogs.map((blog) => (
           <BlogItem {...blog} key={blog.id} />
         ))}
@@ -117,7 +113,13 @@ function BlogItemMenu(props: AppProps & { blogId: string }) {
         >
           View
         </Menu.Item>
-        <Menu.Item icon={<Icon name="IconEdit" />}>Edit</Menu.Item>
+        <Menu.Item
+          component={Link}
+          href={{ pathname: `/dashboard/blog/${blogId}`, search: "type=edit" }}
+          icon={<Icon name="IconEdit" />}
+        >
+          Edit
+        </Menu.Item>
         <Menu.Item color="red" icon={<Icon name="IconTrash" />} onClick={handleDelete}>
           Delete
         </Menu.Item>

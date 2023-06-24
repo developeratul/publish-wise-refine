@@ -1,11 +1,13 @@
 "use client";
 import Icon from "@/components/Icon";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { AppProps } from "@/types";
 import { Card, Flex, SimpleGrid, Stack, Text, ThemeIcon, Title } from "@mantine/core";
 
 export default function DashboardStats() {
+  const { isOverSm } = useMediaQuery();
   return (
-    <SimpleGrid cols={3}>
+    <SimpleGrid cols={isOverSm ? 3 : 1}>
       <StatCard>
         <Flex gap={30} justify="space-between" align="center">
           <ThemeIcon variant="light" color="orange" size={70}>

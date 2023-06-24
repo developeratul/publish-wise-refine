@@ -51,4 +51,10 @@ export const theme: MantineProviderProps["theme"] = {
     transform: "none",
   },
   defaultRadius: "md",
+  breakpoints: {
+    xs: "36rem",
+    sm: "48rem",
+    lg: "62rem",
+    xl: "88rem",
+  },
 };
