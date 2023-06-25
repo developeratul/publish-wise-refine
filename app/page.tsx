@@ -13,3 +13,5 @@ export default async function App() {
     return redirect("/home");
   }
 }
+
+export const dynamic = "force-dynamic";

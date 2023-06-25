@@ -17,3 +17,5 @@ export default async function DashboardLayout(props: AppProps) {
   if (!session || !user) return redirect("/auth");
   return <DashboardLayoutWrapper user={user}>{children}</DashboardLayoutWrapper>;
 }
+
+export const dynamic = "force-dynamic";

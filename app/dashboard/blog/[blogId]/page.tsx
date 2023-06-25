@@ -36,3 +36,5 @@ export default async function BlogDetailsByIdPage(props: PageProps) {
     </BlogProvider>
   );
 }
+
+export const dynamic = "force-dynamic";

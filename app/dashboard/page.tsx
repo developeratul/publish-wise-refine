@@ -29,3 +29,5 @@ export default async function DashboardRootPage() {
     </DashboardProvider>
   );
 }
+
+export const dynamic = "force-dynamic";

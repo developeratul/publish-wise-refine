@@ -17,6 +17,7 @@ export default function MarkdownEditor(props: { editor: Editor | null; isEditing
             <RichTextEditor.ClearFormatting />
             <RichTextEditor.Highlight />
             <RichTextEditor.Code />
+            <RichTextEditor.CodeBlock />
             <InsertImage editor={editor} />
           </RichTextEditor.ControlsGroup>
 

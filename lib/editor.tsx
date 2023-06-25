@@ -107,7 +107,10 @@ export function useBaseEditor(props?: Omit<Partial<EditorOptions>, "extensions">
         addNodeView() {
           return ReactNodeViewRenderer(CodeBlockComponent);
         },
-      }).configure({ lowlight, defaultLanguage: "plaintext" }),
+      }).configure({
+        lowlight,
+        defaultLanguage: "plaintext",
+      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Start writing..." }),
     ],
