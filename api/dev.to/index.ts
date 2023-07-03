@@ -1,3 +1,4 @@
+import { BlogUser } from "@/types";
 import Axios, { AxiosInstance } from "axios";
 import { DevToPublishArticleFields, DevToUser } from "./types";
 
@@ -22,9 +23,9 @@ export class DevToApiClient {
     });
   }
 
-  public async getAuthUser() {
-    const { id, name, profile_image, username } = (await this.axios.post<DevToUser>("/users/me"))
+  public async getAuthUser(): Promise<BlogUser> {
+    const { id, name, profile_image, username } = (await this.axios.get<DevToUser>("/users/me"))
       .data;
-    return { id, name, profile_image, username };
+    return { id, username, name, avatarUrl: profile_image };
   }
 }

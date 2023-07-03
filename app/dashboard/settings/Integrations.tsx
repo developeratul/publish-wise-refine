@@ -1,31 +1,86 @@
 "use client";
-import DevLogoSrc from "@/assets/logos/dev-to.png";
+import DevToLogoSrc from "@/assets/logos/dev-to.png";
+import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
+import MediumLogoSrc from "@/assets/logos/medium.png";
 import { Conditional } from "@/components/Conditional";
 import Icon from "@/components/Icon";
-import { FullPageRelativeLoader } from "@/components/Loader";
+import { SectionLoader } from "@/components/Loader";
 import { supabaseClient } from "@/lib/supabase";
-import { Anchor, Button, Card, Flex, Group, Stack, Text, TextInput, Title } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { BlogApiKeyNames, BlogProviders, BlogUser } from "@/types";
+import {
+  Anchor,
+  Avatar,
+  Button,
+  Card,
+  Flex,
+  Group,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Image from "next/image";
+import axios from "axios";
+import Image, { StaticImageData } from "next/image";
 import React from "react";
 import { toast } from "react-hot-toast";
 
-interface IntegrationsForm {
-  devToAPIKey: string | null;
-  mediumAPIKey: string | null;
-  hashnodeAPIKey: string | null;
+export default function Integrations() {
+  return (
+    <Stack spacing="xl">
+      <Title order={2}>Integrations</Title>
+      <Stack spacing={50}>
+        <SingleIntegration
+          provider="dev.to"
+          name="Dev.to"
+          linkUrl="https://dev.to/settings/extensions"
+          description="Dev.to is a place where coders share, stay up-to-date and grow their careers."
+          apiKeyName="devToAPIKey"
+          logoSrc={DevToLogoSrc}
+        />
+        <SingleIntegration
+          provider="hashNode"
+          name="HashNode"
+          linkUrl="https://hashnode.com/settings/developer"
+          description="Everything you need to start blogging as a developer!"
+          apiKeyName="hashNodeAPIKey"
+          logoSrc={HashNodeLogoSrc}
+        />
+        <SingleIntegration
+          provider="medium"
+          name="Medium"
+          linkUrl="https://medium.com/me/settings"
+          description="Medium is a place to write, read, and connect."
+          apiKeyName="mediumAPIKey"
+          logoSrc={MediumLogoSrc}
+        />
+      </Stack>
+    </Stack>
+  );
 }
 
-export default function Integrations() {
-  const { getInputProps, values, setValues, setFieldValue } = useForm<IntegrationsForm>({
-    initialValues: {
-      devToAPIKey: "",
-      hashnodeAPIKey: "",
-      mediumAPIKey: "",
-    },
-  });
-  const { isLoading, data } = useQuery({
+interface SingleIntegrationProps {
+  name: string;
+  description: string;
+  linkUrl: string;
+  logoSrc: StaticImageData;
+  apiKeyName: BlogApiKeyNames;
+  provider: BlogProviders;
+}
+
+/**
+ * TODO: Show the user data fetched through the api keys
+ * TODO: Remove api key
+ * TODO: API key expired alert
+ */
+function SingleIntegration(props: SingleIntegrationProps) {
+  const { description, logoSrc, name, apiKeyName, provider, linkUrl } = props;
+  const [apiKey, setApiKey] = React.useState("");
+  const {
+    isLoading: isApiKeyDataLoading,
+    data: apiKeysData,
+    isError,
+  } = useQuery({
     queryKey: ["get-blog-api-keys"],
     queryFn: async () => {
       const {
@@ -46,23 +101,35 @@ export default function Integrations() {
       return data;
     },
     onSuccess(data) {
-      setValues({
-        devToAPIKey: data.devToAPIKey,
-        hashnodeAPIKey: data.hashnodeAPIKey,
-        mediumAPIKey: data.mediumAPIKey,
-      });
+      setApiKey(data[apiKeyName] || "");
     },
   });
-  const { mutateAsync, isLoading: isUpdatingAPIKeys } = useMutation({
+  const { isLoading: isIntegrationStatusLoading, data: userBlogAccountData } = useQuery({
+    queryKey: ["get-integration-status", provider],
+    queryFn: async () => {
+      const { data } = await axios.post<BlogUser>(
+        `/dashboard/settings/integration-status`,
+        {
+          provider: provider,
+          apiKey: apiKeysData && apiKeysData[apiKeyName],
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return data;
+    },
+    enabled: !!(apiKeysData && apiKeysData[apiKeyName]),
+    useErrorBoundary: false,
+  });
+  console.log(userBlogAccountData?.name, userBlogAccountData?.avatarUrl);
+  const { mutateAsync, isLoading: isUpdating } = useMutation({
     mutationKey: ["update-blog-api-keys"],
-    mutationFn: async (values: IntegrationsForm) => {
-      const { devToAPIKey, hashnodeAPIKey, mediumAPIKey } = values;
+    mutationFn: async () => {
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
       const { data, error } = await supabaseClient
         .from("profiles")
-        .update({ devToAPIKey, hashnodeAPIKey, mediumAPIKey })
+        .update({ [apiKeyName]: apiKey })
         .eq("userId", user?.id)
         .select("*")
         .single();
@@ -75,86 +142,96 @@ export default function Integrations() {
   });
   const queryClient = useQueryClient();
 
-  if (isLoading) return <FullPageRelativeLoader />;
+  if (isApiKeyDataLoading) return <SectionLoader />;
+  if (isError) return <></>;
+
+  console.log(provider, userBlogAccountData);
+
+  const savedAPIKey = apiKeysData[apiKeyName];
 
   const handleSave = async () => {
     try {
-      await mutateAsync(values);
+      await mutateAsync();
       await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
     } catch (err) {
       //
     }
   };
 
-  const handleRemove = async (field: keyof IntegrationsForm) => {
-    try {
-      setFieldValue(field, "");
-      await mutateAsync({ ...values, [field]: "" });
-      await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
-    } catch (err) {
-      //
-    }
-  };
+  // const handleRemove = async () => {
+  //   try {
+  //     await mutateAsync();
+  //     await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
+  //   } catch (err) {
+  //     //
+  //   }
+  // };
 
   return (
-    <Stack spacing="xl">
-      <Title order={2}>Integrations</Title>
-      <Flex gap="xl">
-        <Stack maw={300} spacing="xs">
-          <Group>
-            <Image width={50} src={DevLogoSrc} alt="DEV.to logo" />
-            <Title order={3}>DEV.to</Title>
-          </Group>
-          <Text>Dev.to is a place where coders share, stay up-to-date and grow their careers.</Text>
+    <Flex gap="xl">
+      <Stack maw={350} spacing="xs">
+        <Group>
+          <Image width={50} src={logoSrc} alt={`${name} logo`} />
+          <Title order={3}>{name}</Title>
+        </Group>
+        <Text>{description}</Text>
+      </Stack>
+      <Card withBorder sx={{ flex: 1 }}>
+        <Stack align="end">
+          <Conditional
+            condition={!!savedAPIKey}
+            component={
+              <Group w="100%">
+                <Avatar src={userBlogAccountData?.avatarUrl} />
+                <Stack>
+                  <Title>{userBlogAccountData?.name}</Title>
+                  <Title>@{userBlogAccountData?.username}</Title>
+                </Stack>
+              </Group>
+            }
+            fallback={
+              <TextInput
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                w="100%"
+                label="API key"
+                description={
+                  <React.Fragment>
+                    <Anchor target="_blank" href={linkUrl}>
+                      Click here
+                    </Anchor>{" "}
+                    to get your API key
+                  </React.Fragment>
+                }
+              />
+            }
+          />
+          <Conditional
+            condition={!!savedAPIKey}
+            component={
+              <Button
+                loading={isUpdating}
+                // onClick={() => handleRemove("devToAPIKey")}
+                color="red"
+                size="xs"
+                leftIcon={<Icon size={16} name="IconTrash" />}
+              >
+                Remove
+              </Button>
+            }
+            fallback={
+              <Button
+                loading={isUpdating}
+                onClick={handleSave}
+                size="xs"
+                leftIcon={<Icon size={16} name="IconDeviceFloppy" />}
+              >
+                Save
+              </Button>
+            }
+          />
         </Stack>
-        <Card withBorder sx={{ flex: 1 }}>
-          <Stack align="end">
-            <Conditional
-              condition={!!data?.devToAPIKey}
-              component={<Text w="100%">{data?.devToAPIKey}</Text>}
-              fallback={
-                <TextInput
-                  {...getInputProps("devToAPIKey")}
-                  w="100%"
-                  label="API key"
-                  description={
-                    <React.Fragment>
-                      <Anchor target="_blank" href="https://dev.to/settings/extensions">
-                        Click here
-                      </Anchor>{" "}
-                      to get your API key
-                    </React.Fragment>
-                  }
-                />
-              }
-            />
-            <Conditional
-              condition={!!data?.devToAPIKey}
-              component={
-                <Button
-                  loading={isUpdatingAPIKeys}
-                  onClick={() => handleRemove("devToAPIKey")}
-                  color="red"
-                  size="xs"
-                  leftIcon={<Icon name="IconTrash" />}
-                >
-                  Remove
-                </Button>
-              }
-              fallback={
-                <Button
-                  loading={isUpdatingAPIKeys}
-                  onClick={handleSave}
-                  size="xs"
-                  leftIcon={<Icon size={16} name="IconDeviceFloppy" />}
-                >
-                  Save
-                </Button>
-              }
-            />
-          </Stack>
-        </Card>
-      </Flex>
-    </Stack>
+      </Card>
+    </Flex>
   );
 }

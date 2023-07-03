@@ -66,9 +66,10 @@ model Profile {
   userId String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  devToAPIKey    String?
-  hashnodeAPIKey String?
-  mediumAPIKey   String?
+  devToAPIKey      String?
+  hashNodeAPIKey   String?
+  hashNodeUsername String?
+  mediumAPIKey     String?
 
   @@map("profiles")
   @@schema("public")

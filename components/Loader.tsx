@@ -1,5 +1,5 @@
 "use client";
-import { Center, Loader } from "@mantine/core";
+import { Card, Center, Loader } from "@mantine/core";
 
 export default function FullPageLoader() {
   return (
@@ -14,5 +14,15 @@ export function FullPageRelativeLoader() {
     <Center py={100} w="100%" h="100%">
       <Loader />
     </Center>
+  );
+}
+
+export function SectionLoader() {
+  return (
+    <Card w="100%" withBorder p={50}>
+      <Center>
+        <Loader />
+      </Center>
+    </Card>
   );
 }

@@ -12,4 +12,15 @@ export type UserMetadata = Partial<{
 
 export type Blog = Database["public"]["Tables"]["blogs"]["Row"];
 
+export interface BlogUser {
+  id: string;
+  username: string;
+  name: string;
+  avatarUrl: string;
+}
+
 export type BlogStatus = Database["public"]["Enums"]["BlogStatus"];
+
+export type BlogProviders = "medium" | "dev.to" | "hashNode";
+
+export type BlogApiKeyNames = "mediumAPIKey" | "devToAPIKey" | "hashNodeAPIKey";
