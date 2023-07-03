@@ -54,7 +54,7 @@ export const authProvider: AuthBindings = {
       redirectTo: "/login",
     };
   },
-  register: async ({ email, password, firstName, lastName }) => {
+  register: async ({ email, password, first_name, last_name }) => {
     try {
       const { data, error } = await supabaseClient.auth.signUp({
         email,
@@ -62,8 +62,8 @@ export const authProvider: AuthBindings = {
         options: {
           emailRedirectTo: absoluteUrl("/auth/callback"),
           data: {
-            firstName,
-            lastName,
+            first_name,
+            last_name,
           } satisfies UserMetadata,
         },
       });

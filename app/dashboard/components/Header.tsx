@@ -41,7 +41,7 @@ export default function DashboardHeader() {
   return (
     <Group spacing="xs" position="apart" align="center">
       <Stack>
-        <Title order={2}>Welcome back, {user?.user_metadata.firstName}</Title>
+        <Title order={2}>Welcome back, {user?.user_metadata.first_name}</Title>
       </Stack>
       <Button
         onClick={handleCreateNewDraft}

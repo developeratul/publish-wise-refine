@@ -11,7 +11,7 @@ export default function FullPageLoader() {
 
 export function FullPageRelativeLoader() {
   return (
-    <Center w="100%" h="100%">
+    <Center py={100} w="100%" h="100%">
       <Loader />
     </Center>
   );

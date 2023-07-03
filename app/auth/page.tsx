@@ -44,7 +44,7 @@ export default function LoginPage() {
     try {
       const { user } = await mutateAsync(values);
       router.push("/dashboard");
-      toast.success(`Welcome back, ${user.user_metadata.firstName}!`);
+      toast.success(`Welcome back, ${user.user_metadata.first_name}!`);
     } catch (err) {
       if (err instanceof AuthError) {
         toast.error(err.message);

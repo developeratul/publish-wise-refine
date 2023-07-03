@@ -19,29 +19,29 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 
-const initialValues = { firstName: "", lastName: "", email: "", password: "" };
+const initialValues = { first_name: "", last_name: "", email: "", password: "" };
 
 export default function SignUpPage() {
   const { getInputProps, onSubmit, reset } = useForm({
     initialValues,
     validate: {
-      firstName: isNotEmpty("First name is required"),
-      lastName: isNotEmpty("Last name is required"),
+      first_name: isNotEmpty("First name is required"),
+      last_name: isNotEmpty("Last name is required"),
       email: isEmail("Invalid email"),
       password: hasLength({ min: 6 }, "Password must contain at least 6 chars"),
     },
   });
   const { mutateAsync, isLoading } = useMutation({
     mutationFn: async (values: typeof initialValues) => {
-      const { email, password, firstName, lastName } = values;
+      const { email, password, first_name, last_name } = values;
       const res = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: absoluteUrl("/auth/callback"),
           data: {
-            firstName,
-            lastName,
+            first_name,
+            last_name,
           } satisfies UserMetadata,
         },
       });
@@ -75,8 +75,8 @@ export default function SignUpPage() {
       </Title>
       <form className="flex flex-col gap-4" onSubmit={onSubmit(handleSubmit)}>
         <Group grow>
-          <TextInput required label="First name" {...getInputProps("firstName")} />
-          <TextInput required label="Last name" {...getInputProps("lastName")} />
+          <TextInput required label="First name" {...getInputProps("first_name")} />
+          <TextInput required label="Last name" {...getInputProps("last_name")} />
         </Group>
         <TextInput required label="Email" type="email" {...getInputProps("email")} />
         <PasswordInput required label="Password" {...getInputProps("password")} />
