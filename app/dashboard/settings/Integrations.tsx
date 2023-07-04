@@ -5,6 +5,7 @@ import MediumLogoSrc from "@/assets/logos/medium.png";
 import { Conditional } from "@/components/Conditional";
 import Icon from "@/components/Icon";
 import { BlockLoader, SectionLoader } from "@/components/Loader";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { supabaseClient } from "@/lib/supabase";
 import { BlogApiKeyNames, BlogProviders, BlogUser } from "@/types";
 import {
@@ -105,10 +106,10 @@ function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
         <Avatar size="xl" radius="xl" src={user.avatarUrl} />
       </Indicator>
       <Stack spacing="xs">
-        <Title order={3} color="white">
+        <Title lineClamp={1} order={3} color="white">
           {user.name}
         </Title>
-        <Text>@{user.username}</Text>
+        <Text lineClamp={1}>@{user.username}</Text>
       </Stack>
     </Group>
   );
@@ -187,6 +188,7 @@ function SingleIntegration(props: SingleIntegrationProps) {
     },
   });
   const [opened, { open, close }] = useDisclosure(false);
+  const { isOverSm } = useMediaQuery();
   const queryClient = useQueryClient();
 
   if (isLoading) return <SectionLoader />;
@@ -222,7 +224,7 @@ function SingleIntegration(props: SingleIntegrationProps) {
   };
 
   return (
-    <Flex gap="xl">
+    <Flex direction={isOverSm ? "row" : "column"} gap="xl">
       <Stack maw={350} spacing="xs">
         <Group>
           <Image width={50} src={logoSrc} alt={`${name} logo`} />
