@@ -44,7 +44,7 @@ export default function DashboardBlogsSection() {
   );
 }
 
-const badgeStyles: Record<BlogStatus, { color: DefaultMantineColor; label: string }> = {
+export const badgeStyles: Record<BlogStatus, { color: DefaultMantineColor; label: string }> = {
   DRAFT: {
     color: "",
     label: "Draft",

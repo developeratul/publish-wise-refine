@@ -1,10 +1,12 @@
 "use client";
 
+import { useBaseEditor } from "@/lib/editor";
 import { supabaseClient } from "@/lib/supabase";
 import { AppProps, Blog } from "@/types";
 import { UseFormReturnType, useForm } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useMutation } from "@tanstack/react-query";
+import { Editor } from "@tiptap/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { toast } from "react-hot-toast";
@@ -15,6 +17,7 @@ interface BlogContextInitialState {
   isSaving: boolean;
   isSavingSuccess: boolean;
   isEditingMode: boolean;
+  editor: Editor | null;
 }
 
 const BlogContext = React.createContext<BlogContextInitialState | undefined>(undefined);
@@ -36,6 +39,13 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
   const [isFirstTime, setFirstTime] = React.useState(true);
   const searchParams = useSearchParams();
   const isEditingMode = searchParams.get("type") === "edit";
+  const editor = useBaseEditor({
+    content: blog.content,
+    editable: isEditingMode,
+    onUpdate({ editor }) {
+      form.setFieldValue("content", editor.getHTML());
+    },
+  });
 
   const { mutateAsync, isLoading, isSuccess } = useMutation({
     mutationFn: async (values: BlogEditForm) => {
@@ -87,7 +97,7 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
 
   return (
     <BlogContext.Provider
-      value={{ blog, form, isSaving: isLoading, isSavingSuccess: isSuccess, isEditingMode }}
+      value={{ blog, form, isSaving: isLoading, isSavingSuccess: isSuccess, isEditingMode, editor }}
     >
       {children}
     </BlogContext.Provider>

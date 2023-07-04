@@ -16,7 +16,7 @@ export default function DashboardLayoutWrapper(props: UserProviderProps) {
       header={
         <Header bg="dark.6" height={70}>
           <Group align="center" position="apart" h="100%" px={20}>
-            <Logo order={3} size={18} />
+            <Logo href="/dashboard" order={3} size={18} />
             <ProfileMenu />
           </Group>
         </Header>

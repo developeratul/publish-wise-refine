@@ -2,17 +2,12 @@
 
 import { useDeleteBlogContext } from "@/app/dashboard/providers/delete-blog";
 import Icon from "@/components/Icon";
-import {
-  ActionIcon,
-  Anchor,
-  Badge,
-  Breadcrumbs,
-  Group,
-  Menu,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
+import { generateSlug } from "@/helpers/blog";
+import { ActionIcon, Anchor, Badge, Breadcrumbs, Group, Menu, Text } from "@mantine/core";
+import { saveAs } from "file-saver";
 import Link from "next/link";
+import React from "react";
+import TurndownService from "turndown";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogHeader() {
@@ -62,6 +57,14 @@ export default function BlogHeader() {
             <Menu.Item onClick={handleDeleteDraft} color="red" icon={<Icon name="IconTrash" />}>
               Delete draft
             </Menu.Item>
+            <Menu.Divider />
+            <Menu.Label>Export</Menu.Label>
+            <ExportBlog format="html">
+              <Menu.Item icon={<Icon name="IconHtml" />}>Export as HTML</Menu.Item>
+            </ExportBlog>
+            <ExportBlog format="markdown">
+              <Menu.Item icon={<Icon name="IconMarkdown" />}>Export as Markdown</Menu.Item>
+            </ExportBlog>
           </Menu.Dropdown>
         </Menu>
       </Group>
@@ -69,9 +72,45 @@ export default function BlogHeader() {
   );
 }
 
+function ExportBlog(props: { children: React.ReactElement; format: "html" | "markdown" }) {
+  const { children, format } = props;
+  const { editor, blog } = useBlogContext();
+  const handleExport = () => {
+    if (!editor) return;
+
+    const mimeTypes: Record<"html" | "markdown", string> = {
+      html: "text/html;charset=utf-8;",
+      markdown: "text/markdown;charset=utf-8;",
+    };
+    const fileExtensions = {
+      html: "",
+      markdown: ".md",
+    };
+    const fileExtension = fileExtensions[format];
+    const mimeType = mimeTypes[format];
+
+    const turndownService = new TurndownService();
+
+    const html = editor.getHTML();
+
+    let content;
+
+    if (format === "markdown") {
+      const markdown = turndownService.turndown(html);
+      content = markdown;
+    } else {
+      content = html;
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    saveAs(blob, `${generateSlug(blog.title)}${fileExtension}`);
+  };
+  const triggeredChildren = React.cloneElement(children, { onClick: handleExport });
+  return triggeredChildren;
+}
+
 function BlogSavingStatus() {
   const { isSaving, isSavingSuccess } = useBlogContext();
-  const { colors } = useMantineTheme();
   if (isSaving) {
     return (
       <Badge color="blue" size="lg" variant="dot">

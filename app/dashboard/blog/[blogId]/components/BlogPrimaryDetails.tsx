@@ -1,15 +1,17 @@
 "use client";
+import { badgeStyles } from "@/app/dashboard/components/Blogs";
 import Icon from "@/components/Icon";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
-import { Button, Stack, Textarea } from "@mantine/core";
+import { Badge, Button, Flex, Group, MultiSelect, Stack, Text, Textarea } from "@mantine/core";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogPrimaryDetails() {
-  const { form, isEditingMode } = useBlogContext();
+  const { form, isEditingMode, blog } = useBlogContext();
   const { isOverSm } = useMediaQuery();
+  const badgeStyle = badgeStyles[blog.status];
   return (
-    <Stack mb={20}>
+    <Stack mb={50}>
       <Stack spacing="xs" className="group">
         {isEditingMode && (
           <Button
@@ -35,6 +37,39 @@ export default function BlogPrimaryDetails() {
           {...form.getInputProps("title")}
         />
       </Stack>
+      <Stack>
+        <Flex align="center">
+          <Group noWrap className="w-full max-w-[250px]" align="center">
+            <Icon size={22} name="IconInfoCircle" />
+            <Text size="lg" className="font-medium">
+              Status
+            </Text>
+          </Group>
+          <div className="flex-1">
+            <Badge size="lg" color={badgeStyle.color}>
+              {badgeStyle.label}
+            </Badge>
+          </div>
+        </Flex>
+        <Flex align="center">
+          <Group noWrap className="w-full max-w-[250px]" align="center">
+            <Icon name="IconTags" size={22} />
+            <Text size="lg" className="font-medium">
+              Tags
+            </Text>
+          </Group>
+          <MultiSelect
+            w="100%"
+            size="md"
+            data={["React", "Angular", "Vue", "Tutorial"]}
+            value={["React", "Angular", "Vue", "Tutorial"]}
+            placeholder="Enter tags"
+          />
+        </Flex>
+      </Stack>
+      <Flex w="100%" justify="end">
+        <Button leftIcon={<Icon name="IconBookUpload" />}>Publish</Button>
+      </Flex>
     </Stack>
   );
 }
