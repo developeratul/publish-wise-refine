@@ -16,11 +16,13 @@ import {
   Flex,
   Group,
   Indicator,
+  Popover,
   Stack,
   Text,
   TextInput,
   Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import Image, { StaticImageData } from "next/image";
@@ -99,7 +101,7 @@ function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
 
   return (
     <Group w="100%" align="center" noWrap>
-      <Indicator color="green">
+      <Indicator position="bottom-end" offset={10} size={15} color="green">
         <Avatar size="xl" radius="xl" src={user.avatarUrl} />
       </Indicator>
       <Stack spacing="xs">
@@ -157,23 +159,34 @@ function SingleIntegration(props: SingleIntegrationProps) {
   });
   const { mutateAsync, isLoading: isUpdating } = useMutation({
     mutationKey: ["update-blog-api-keys"],
-    mutationFn: async () => {
+    mutationFn: async (input: { removeAPIKey?: boolean; removeHashNodeUsername?: boolean }) => {
+      const { removeAPIKey = false, removeHashNodeUsername = false } = input;
+
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
+
       const { data, error } = await supabaseClient
         .from("profiles")
-        .update({ [apiKeyName]: apiKeyInput, hashNodeUsername: hashNodeUserNameInput })
+        .update({
+          [apiKeyName]: removeAPIKey ? null : apiKeyInput,
+          ...(provider === "hashNode"
+            ? { hashNodeUsername: removeHashNodeUsername ? null : hashNodeUserNameInput }
+            : {}),
+        })
         .eq("userId", user?.id)
         .select("*")
         .single();
+
       if (error) {
         toast.error(error.message);
         throw error;
       }
+
       return data;
     },
   });
+  const [opened, { open, close }] = useDisclosure(false);
   const queryClient = useQueryClient();
 
   if (isLoading) return <SectionLoader />;
@@ -186,7 +199,7 @@ function SingleIntegration(props: SingleIntegrationProps) {
 
   const handleSave = async () => {
     try {
-      await mutateAsync();
+      await mutateAsync({});
       await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
       await queryClient.invalidateQueries({ queryKey: ["get-integration-status", provider] });
     } catch (err) {
@@ -194,14 +207,19 @@ function SingleIntegration(props: SingleIntegrationProps) {
     }
   };
 
-  // const handleRemove = async () => {
-  //   try {
-  //     await mutateAsync();
-  //     await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
-  //   } catch (err) {
-  //     //
-  //   }
-  // };
+  const handleRemove = async () => {
+    try {
+      await mutateAsync({
+        removeAPIKey: true,
+        removeHashNodeUsername: provider === "hashNode",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
+      await queryClient.invalidateQueries({ queryKey: ["get-integration-status", provider] });
+      close();
+    } catch (err) {
+      //
+    }
+  };
 
   return (
     <Flex gap="xl">
@@ -262,14 +280,38 @@ function SingleIntegration(props: SingleIntegrationProps) {
           <Conditional
             condition={hasAllCredentialsToShowDetails}
             component={
-              <Button
-                loading={isUpdating}
-                color="red"
-                size="xs"
-                leftIcon={<Icon size={16} name="IconTrash" />}
-              >
-                Remove
-              </Button>
+              <Popover withinPortal withArrow opened={opened} onClose={close}>
+                <Popover.Target>
+                  <Button
+                    onClick={open}
+                    loading={isUpdating}
+                    color="red"
+                    size="xs"
+                    leftIcon={<Icon size={16} name="IconTrash" />}
+                  >
+                    Remove
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown w="100%" maw={400}>
+                  <Stack>
+                    <Title order={3} color="white">
+                      Are you sure?
+                    </Title>
+                    <Text>
+                      Your account will get disconnected from PublishWise and will require a
+                      reconnection
+                    </Text>
+                    <Group>
+                      <Button loading={isUpdating} onClick={handleRemove} color="red">
+                        Yes
+                      </Button>
+                      <Button onClick={close} loading={isUpdating} variant="subtle">
+                        No
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Popover.Dropdown>
+              </Popover>
             }
             fallback={
               <Button
