@@ -26,6 +26,6 @@ export class DevToApiClient {
   public async getAuthUser(): Promise<BlogUser> {
     const { id, name, profile_image, username } = (await this.axios.get<DevToUser>("/users/me"))
       .data;
-    return { id, username, name, avatarUrl: profile_image };
+    return { id: id.toString(), username, name, avatarUrl: profile_image };
   }
 }

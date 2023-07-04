@@ -127,8 +127,9 @@ interface SingleIntegrationProps {
 
 /**
  * // TODO: Show the user data fetched through the api keys
- * TODO: Remove api key
+ * // TODO: Remove api key
  * // TODO: API key expired alert
+ * // TODO: Merge two endpoints into one to get the API keys + the blog user details
  */
 function SingleIntegration(props: SingleIntegrationProps) {
   const { description, logoSrc, name, apiKeyName, provider, linkUrl, secondaryLinkUrl } = props;
