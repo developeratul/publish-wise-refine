@@ -4,23 +4,25 @@ import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
 import MediumLogoSrc from "@/assets/logos/medium.png";
 import { Conditional } from "@/components/Conditional";
 import Icon from "@/components/Icon";
-import { SectionLoader } from "@/components/Loader";
+import { BlockLoader, SectionLoader } from "@/components/Loader";
 import { supabaseClient } from "@/lib/supabase";
 import { BlogApiKeyNames, BlogProviders, BlogUser } from "@/types";
 import {
+  Alert,
   Anchor,
   Avatar,
   Button,
   Card,
   Flex,
   Group,
+  Indicator,
   Stack,
   Text,
   TextInput,
   Title,
 } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Image, { StaticImageData } from "next/image";
 import React from "react";
 import { toast } from "react-hot-toast";
@@ -42,6 +44,7 @@ export default function Integrations() {
           provider="hashNode"
           name="HashNode"
           linkUrl="https://hashnode.com/settings/developer"
+          secondaryLinkUrl="https://hashnode.com/settings"
           description="Everything you need to start blogging as a developer!"
           apiKeyName="hashNodeAPIKey"
           logoSrc={HashNodeLogoSrc}
@@ -59,28 +62,76 @@ export default function Integrations() {
   );
 }
 
+interface UserBlogAccountDetailsProps {
+  apiKey: string | null;
+  provider: BlogProviders;
+  hashNodeUsername?: string;
+}
+
+function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
+  const { apiKey, provider, hashNodeUsername } = props;
+  const { isLoading, data, isError, error } = useQuery({
+    queryKey: ["get-integration-status", provider],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await axios.post<{ user: BlogUser }>(
+        `/dashboard/settings/integration-status`,
+        { provider: provider, apiKey, hashNodeUsername },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return user;
+    },
+    enabled: !!apiKey,
+    useErrorBoundary: false,
+  });
+
+  if (isLoading) return <BlockLoader />;
+  if (isError && error instanceof AxiosError && error.response?.status === 401)
+    return (
+      <Alert w="100%" icon={<Icon name="IconAlertTriangle" />} color="red">
+        {error.response.data.message}
+      </Alert>
+    );
+  if (isError) return <></>;
+
+  const user = data;
+
+  return (
+    <Group w="100%" align="center" noWrap>
+      <Indicator color="green">
+        <Avatar size="xl" radius="xl" src={user.avatarUrl} />
+      </Indicator>
+      <Stack spacing="xs">
+        <Title order={3} color="white">
+          {user.name}
+        </Title>
+        <Text>@{user.username}</Text>
+      </Stack>
+    </Group>
+  );
+}
+
 interface SingleIntegrationProps {
   name: string;
   description: string;
   linkUrl: string;
+  secondaryLinkUrl?: string;
   logoSrc: StaticImageData;
   apiKeyName: BlogApiKeyNames;
   provider: BlogProviders;
 }
 
 /**
- * TODO: Show the user data fetched through the api keys
+ * // TODO: Show the user data fetched through the api keys
  * TODO: Remove api key
- * TODO: API key expired alert
+ * // TODO: API key expired alert
  */
 function SingleIntegration(props: SingleIntegrationProps) {
-  const { description, logoSrc, name, apiKeyName, provider, linkUrl } = props;
-  const [apiKey, setApiKey] = React.useState("");
-  const {
-    isLoading: isApiKeyDataLoading,
-    data: apiKeysData,
-    isError,
-  } = useQuery({
+  const { description, logoSrc, name, apiKeyName, provider, linkUrl, secondaryLinkUrl } = props;
+  const [apiKeyInput, setApiKeyInput] = React.useState("");
+  const [hashNodeUserNameInput, setHashNodeUsernameInput] = React.useState("");
+  const { isLoading, data, isError } = useQuery({
     queryKey: ["get-blog-api-keys"],
     queryFn: async () => {
       const {
@@ -101,26 +152,9 @@ function SingleIntegration(props: SingleIntegrationProps) {
       return data;
     },
     onSuccess(data) {
-      setApiKey(data[apiKeyName] || "");
+      setApiKeyInput(data[apiKeyName] || "");
     },
   });
-  const { isLoading: isIntegrationStatusLoading, data: userBlogAccountData } = useQuery({
-    queryKey: ["get-integration-status", provider],
-    queryFn: async () => {
-      const { data } = await axios.post<BlogUser>(
-        `/dashboard/settings/integration-status`,
-        {
-          provider: provider,
-          apiKey: apiKeysData && apiKeysData[apiKeyName],
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      return data;
-    },
-    enabled: !!(apiKeysData && apiKeysData[apiKeyName]),
-    useErrorBoundary: false,
-  });
-  console.log(userBlogAccountData?.name, userBlogAccountData?.avatarUrl);
   const { mutateAsync, isLoading: isUpdating } = useMutation({
     mutationKey: ["update-blog-api-keys"],
     mutationFn: async () => {
@@ -129,7 +163,7 @@ function SingleIntegration(props: SingleIntegrationProps) {
       } = await supabaseClient.auth.getUser();
       const { data, error } = await supabaseClient
         .from("profiles")
-        .update({ [apiKeyName]: apiKey })
+        .update({ [apiKeyName]: apiKeyInput, hashNodeUsername: hashNodeUserNameInput })
         .eq("userId", user?.id)
         .select("*")
         .single();
@@ -142,17 +176,19 @@ function SingleIntegration(props: SingleIntegrationProps) {
   });
   const queryClient = useQueryClient();
 
-  if (isApiKeyDataLoading) return <SectionLoader />;
+  if (isLoading) return <SectionLoader />;
   if (isError) return <></>;
 
-  console.log(provider, userBlogAccountData);
-
-  const savedAPIKey = apiKeysData[apiKeyName];
+  const apiKey = data[apiKeyName];
+  const hashNodeUsername = data["hashNodeUsername"];
+  const hasAllCredentialsToShowDetails =
+    provider === "hashNode" ? !!hashNodeUsername && !!apiKey : !!apiKey;
 
   const handleSave = async () => {
     try {
       await mutateAsync();
       await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
+      await queryClient.invalidateQueries({ queryKey: ["get-integration-status", provider] });
     } catch (err) {
       //
     }
@@ -179,39 +215,55 @@ function SingleIntegration(props: SingleIntegrationProps) {
       <Card withBorder sx={{ flex: 1 }}>
         <Stack align="end">
           <Conditional
-            condition={!!savedAPIKey}
+            condition={hasAllCredentialsToShowDetails}
             component={
-              <Group w="100%">
-                <Avatar src={userBlogAccountData?.avatarUrl} />
-                <Stack>
-                  <Title>{userBlogAccountData?.name}</Title>
-                  <Title>@{userBlogAccountData?.username}</Title>
-                </Stack>
-              </Group>
+              <UserBlogAccountDetails
+                hashNodeUsername={hashNodeUsername || undefined}
+                apiKey={apiKey}
+                provider={provider}
+              />
             }
             fallback={
-              <TextInput
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                w="100%"
-                label="API key"
-                description={
-                  <React.Fragment>
-                    <Anchor target="_blank" href={linkUrl}>
-                      Click here
-                    </Anchor>{" "}
-                    to get your API key
-                  </React.Fragment>
-                }
-              />
+              <Stack w="100%">
+                <TextInput
+                  value={apiKeyInput}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                  w="100%"
+                  label="API key"
+                  description={
+                    <React.Fragment>
+                      <Anchor target="_blank" href={linkUrl}>
+                        Click here
+                      </Anchor>{" "}
+                      to get your API key
+                    </React.Fragment>
+                  }
+                />
+                {provider === "hashNode" && (
+                  <TextInput
+                    label="Username"
+                    onChange={(e) => setHashNodeUsernameInput(e.target.value)}
+                    value={hashNodeUserNameInput}
+                    icon={<Icon name="IconAt" size={18} />}
+                    description={
+                      <React.Fragment>
+                        <Anchor target="_blank" href={secondaryLinkUrl}>
+                          Click here
+                        </Anchor>{" "}
+                        to get your Hashnode Username. You can find it under the &quot;Personal
+                        Identity&quot; section.
+                      </React.Fragment>
+                    }
+                  />
+                )}
+              </Stack>
             }
           />
           <Conditional
-            condition={!!savedAPIKey}
+            condition={hasAllCredentialsToShowDetails}
             component={
               <Button
                 loading={isUpdating}
-                // onClick={() => handleRemove("devToAPIKey")}
                 color="red"
                 size="xs"
                 leftIcon={<Icon size={16} name="IconTrash" />}

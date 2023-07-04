@@ -26,3 +26,11 @@ export function SectionLoader() {
     </Card>
   );
 }
+
+export function BlockLoader() {
+  return (
+    <Center w="100%" py={20}>
+      <Loader />
+    </Center>
+  );
+}
