@@ -8,10 +8,12 @@ import { saveAs } from "file-saver";
 import Link from "next/link";
 import React from "react";
 import { useBlogContext } from "../BlogProvider";
+import { useImportBlog } from "./ImportBlogModal";
 
 export default function BlogHeader() {
   const { blog, isEditingMode } = useBlogContext();
   const { openDeleteBlogModal } = useDeleteBlogContext();
+  const { open } = useImportBlog();
 
   const handleDeleteDraft = () => {
     openDeleteBlogModal(blog.id);
@@ -66,27 +68,17 @@ export default function BlogHeader() {
             </ExportBlog>
             <Menu.Divider />
             <Menu.Label>Import</Menu.Label>
-            <ImportBlogContent>
-              <Menu.Item icon={<Icon name="IconHtml" />}>Import from HTML</Menu.Item>
-            </ImportBlogContent>
-            <ImportBlogContent>
-              <Menu.Item icon={<Icon name="IconMarkdown" />}>Import from Markdown</Menu.Item>
-            </ImportBlogContent>
+            <Menu.Item onClick={() => open("html")} icon={<Icon name="IconHtml" />}>
+              Import from HTML
+            </Menu.Item>
+            <Menu.Item onClick={() => open("markdown")} icon={<Icon name="IconMarkdown" />}>
+              Import from Markdown
+            </Menu.Item>
           </Menu.Dropdown>
         </Menu>
       </Group>
     </Group>
   );
-}
-
-function ImportBlogContent(props: { children: React.ReactElement }) {
-  const { children } = props;
-  const { editor, blog } = useBlogContext();
-  const handleImport = () => {
-    if (!editor) return;
-  };
-  const triggeredChildren = React.cloneElement(children, { onClick: handleImport });
-  return triggeredChildren;
 }
 
 function ExportBlog(props: { children: React.ReactElement; format: "html" | "markdown" }) {

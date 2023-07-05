@@ -44,7 +44,9 @@ import html from "highlight.js/lib/languages/xml";
 
 // Registering them individually for renaming the keys
 lowlight.registerLanguage("ts", ts);
+lowlight.registerLanguage("tsx", ts);
 lowlight.registerLanguage("js", js);
+lowlight.registerLanguage("jsx", js);
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("py", python);
 lowlight.registerLanguage("kt", kotlin);

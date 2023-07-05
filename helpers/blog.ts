@@ -1,4 +1,4 @@
-import TurndownService from "turndown";
+import { Converter } from "showdown";
 
 export function generateSlug(blogTitle: string): string {
   const slug = blogTitle
@@ -11,19 +11,12 @@ export function generateSlug(blogTitle: string): string {
 }
 
 export function htmlToMarkdown(html: string) {
-  const turndownService = new TurndownService({
-    codeBlockStyle: "fenced",
-    fence: "```",
-    headingStyle: "atx",
-    hr: "---",
-    bulletListMarker: "-",
-    emDelimiter: "*",
-    strongDelimiter: "**",
-  });
-
-  turndownService.keep(["p", "mark", "sup", "sub", "del", "s"]);
-
-  const markdown = turndownService.turndown(html);
-
+  const converter = new Converter();
+  const markdown = converter.makeMarkdown(html);
   return markdown;
+}
+
+export function markdownToHtml(markdown: string) {
+  const converter = new Converter();
+  return converter.makeHtml(markdown);
 }

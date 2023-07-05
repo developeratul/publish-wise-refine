@@ -10,6 +10,7 @@ import { Editor } from "@tiptap/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { toast } from "react-hot-toast";
+import ImportBlogModal from "./components/ImportBlogModal";
 
 interface BlogContextInitialState {
   blog: Blog;
@@ -46,6 +47,11 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
     editable: isEditingMode,
     onUpdate({ editor }) {
       form.setFieldValue("content", editor.getHTML());
+    },
+    onFocus({ editor, event }) {
+      if (event.isTrusted) {
+        form.setFieldValue("content", editor.getHTML());
+      }
     },
   });
 
@@ -102,7 +108,7 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
     <BlogContext.Provider
       value={{ blog, form, isSaving: isLoading, isSavingSuccess: isSuccess, isEditingMode, editor }}
     >
-      {children}
+      <ImportBlogModal>{children}</ImportBlogModal>
     </BlogContext.Provider>
   );
 }
