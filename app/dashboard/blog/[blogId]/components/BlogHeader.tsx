@@ -2,12 +2,11 @@
 
 import { useDeleteBlogContext } from "@/app/dashboard/providers/delete-blog";
 import Icon from "@/components/Icon";
-import { generateSlug } from "@/helpers/blog";
+import { generateSlug, htmlToMarkdown } from "@/helpers/blog";
 import { ActionIcon, Anchor, Badge, Breadcrumbs, Group, Menu, Text } from "@mantine/core";
 import { saveAs } from "file-saver";
 import Link from "next/link";
 import React from "react";
-import TurndownService from "turndown";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogHeader() {
@@ -89,14 +88,12 @@ function ExportBlog(props: { children: React.ReactElement; format: "html" | "mar
     const fileExtension = fileExtensions[format];
     const mimeType = mimeTypes[format];
 
-    const turndownService = new TurndownService();
-
     const html = editor.getHTML();
 
     let content;
 
     if (format === "markdown") {
-      const markdown = turndownService.turndown(html);
+      const markdown = htmlToMarkdown(html);
       content = markdown;
     } else {
       content = html;
