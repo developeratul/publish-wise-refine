@@ -25,6 +25,7 @@ const BlogContext = React.createContext<BlogContextInitialState | undefined>(und
 interface BlogEditForm {
   title: string;
   content: string;
+  tags: string[];
 }
 
 export default function BlogProvider(props: AppProps & { blog: Blog }) {
@@ -33,6 +34,7 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
     initialValues: {
       title: blog.title,
       content: blog.content || "",
+      tags: (blog.tags as string[]) || [],
     },
   });
   const [debouncedValues] = useDebouncedValue(form.values, 1000);
@@ -48,6 +50,7 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
   });
 
   const { mutateAsync, isLoading, isSuccess } = useMutation({
+    mutationKey: ["update-blog"],
     mutationFn: async (values: BlogEditForm) => {
       const { error, data } = await supabaseClient
         .from("blogs")

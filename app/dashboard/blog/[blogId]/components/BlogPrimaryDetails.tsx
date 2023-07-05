@@ -2,8 +2,17 @@
 import { badgeStyles } from "@/app/dashboard/components/Blogs";
 import Icon from "@/components/Icon";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import { cn } from "@/lib/utils";
-import { Badge, Button, Flex, Group, MultiSelect, Stack, Text, Textarea } from "@mantine/core";
+import {
+  Badge,
+  CloseButton,
+  Flex,
+  Group,
+  MultiSelect,
+  MultiSelectValueProps,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogPrimaryDetails() {
@@ -12,36 +21,27 @@ export default function BlogPrimaryDetails() {
   const badgeStyle = badgeStyles[blog.status];
   return (
     <Stack mb={50}>
-      <Stack spacing="xs" className="group">
-        {isEditingMode && (
-          <Button
-            w="fit-content"
-            className={cn(
-              "group-hover:opacity-100 duration-200",
-              isOverSm ? "opacity-0" : "opacity-100"
-            )}
-            leftIcon={<Icon name="IconPhotoPlus" size={16} />}
-            size="xs"
-            variant="subtle"
-          >
-            Add cover
-          </Button>
-        )}
+      <Stack spacing="xs">
         <Textarea
+          {...form.getInputProps("title")}
           autosize
           readOnly={!isEditingMode}
           spellCheck={!isEditingMode}
           styles={{
-            input: { fontSize: isOverSm ? 40 : 30, background: "transparent", border: "none" },
+            input: {
+              fontSize: isOverSm ? 40 : 30,
+              padding: "0 0",
+              background: "transparent",
+              border: "none",
+            },
           }}
-          {...form.getInputProps("title")}
         />
       </Stack>
       <Stack>
         <Flex align="center">
           <Group noWrap className="w-full max-w-[250px]" align="center">
             <Icon size={22} name="IconInfoCircle" />
-            <Text size="lg" className="font-medium">
+            <Text size="md" className="font-medium">
               Status
             </Text>
           </Group>
@@ -54,22 +54,66 @@ export default function BlogPrimaryDetails() {
         <Flex align="center">
           <Group noWrap className="w-full max-w-[250px]" align="center">
             <Icon name="IconTags" size={22} />
-            <Text size="lg" className="font-medium">
+            <Text size="md" className="font-medium">
               Tags
             </Text>
           </Group>
-          <MultiSelect
-            w="100%"
-            size="md"
-            data={["React", "Angular", "Vue", "Tutorial"]}
-            value={["React", "Angular", "Vue", "Tutorial"]}
-            placeholder="Enter tags"
-          />
+          <BlogTags />
         </Flex>
       </Stack>
-      <Flex w="100%" justify="end">
-        <Button leftIcon={<Icon name="IconBookUpload" />}>Publish</Button>
-      </Flex>
     </Stack>
+  );
+}
+
+function BlogTags() {
+  const { isEditingMode, form } = useBlogContext();
+  const { tags } = form.values;
+  const tagsFormatted = tags.map((tag) => ({ label: tag, value: tag }));
+  return (
+    <MultiSelect
+      styles={{
+        input: { border: "none", background: "transparent" },
+        values: { gap: 8 },
+      }}
+      readOnly={!isEditingMode}
+      valueComponent={MultiSelectValue}
+      searchable
+      creatable
+      w="100%"
+      rightSection={<></>}
+      size="md"
+      data={tagsFormatted}
+      value={tags}
+      onChange={(tags) => form.setFieldValue("tags", tags)}
+      placeholder="Enter tags"
+      getCreateLabel={(query) => `+ Add ${query}`}
+      onCreate={(tag) => {
+        form.setFieldValue("tags", [...(tags as string[]), tag]);
+        return tag;
+      }}
+    />
+  );
+}
+
+function MultiSelectValue(props: MultiSelectValueProps & { value: string }) {
+  const { value, onRemove } = props;
+  return (
+    <Badge
+      pr={3}
+      radius="md"
+      size="lg"
+      variant="filled"
+      rightSection={
+        <CloseButton
+          onClick={onRemove}
+          variant="transparent"
+          size={22}
+          iconSize={14}
+          tabIndex={-1}
+        />
+      }
+    >
+      {value}
+    </Badge>
   );
 }

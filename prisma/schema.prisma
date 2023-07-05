@@ -80,6 +80,7 @@ model Blog {
   status     BlogStatus @default(DRAFT)
   title      String
   content    String?    @default("")
+  tags       Json?
   created_at DateTime   @default(now()) @db.Timestamptz(6)
   userId     String     @map("user_id") @db.Uuid
   user       User       @relation(fields: [userId], references: [id])

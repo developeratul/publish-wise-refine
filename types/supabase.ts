@@ -15,6 +15,7 @@ export interface Database {
           created_at: string
           id: string
           status: Database["public"]["Enums"]["BlogStatus"]
+          tags: Json | null
           title: string
           user_id: string
         }
@@ -23,6 +24,7 @@ export interface Database {
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["BlogStatus"]
+          tags?: Json | null
           title: string
           user_id: string
         }
@@ -31,6 +33,7 @@ export interface Database {
           created_at?: string
           id?: string
           status?: Database["public"]["Enums"]["BlogStatus"]
+          tags?: Json | null
           title?: string
           user_id?: string
         }

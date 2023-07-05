@@ -64,11 +64,29 @@ export default function BlogHeader() {
             <ExportBlog format="markdown">
               <Menu.Item icon={<Icon name="IconMarkdown" />}>Export as Markdown</Menu.Item>
             </ExportBlog>
+            <Menu.Divider />
+            <Menu.Label>Import</Menu.Label>
+            <ImportBlogContent>
+              <Menu.Item icon={<Icon name="IconHtml" />}>Import from HTML</Menu.Item>
+            </ImportBlogContent>
+            <ImportBlogContent>
+              <Menu.Item icon={<Icon name="IconMarkdown" />}>Import from Markdown</Menu.Item>
+            </ImportBlogContent>
           </Menu.Dropdown>
         </Menu>
       </Group>
     </Group>
   );
+}
+
+function ImportBlogContent(props: { children: React.ReactElement }) {
+  const { children } = props;
+  const { editor, blog } = useBlogContext();
+  const handleImport = () => {
+    if (!editor) return;
+  };
+  const triggeredChildren = React.cloneElement(children, { onClick: handleImport });
+  return triggeredChildren;
 }
 
 function ExportBlog(props: { children: React.ReactElement; format: "html" | "markdown" }) {
