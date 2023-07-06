@@ -1,14 +1,16 @@
 import { DevToApiClient } from "@/api/dev.to";
 import { HashNodeApiClient } from "@/api/hashnode";
 import { MediumApiClient } from "@/api/medium";
+import { BlogProviders, BlogUser } from "@/types";
 import { Database } from "@/types/supabase";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { AxiosError } from "axios";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function POST(req: Request) {
   try {
+    const { devToAPIKey, hashNodeAPIKey, hashNodeUsername, mediumAPIKey } = ({} = await req.json());
     const supabase = createRouteHandlerClient<Database>({ cookies });
 
     const {
@@ -19,17 +21,11 @@ export async function GET() {
       return NextResponse.json({ message: "User not authenticated" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("userId", user.id)
-      .single();
+    const { error } = await supabase.from("profiles").select("*").eq("userId", user.id).single();
 
     if (error) {
       return NextResponse.json({ message: error.message }, { status: 500 });
     }
-
-    const { devToAPIKey, hashNodeAPIKey, hashNodeUsername, mediumAPIKey } = data;
 
     let devToAccount;
     if (devToAPIKey) {
@@ -78,4 +74,9 @@ export async function GET() {
       return NextResponse.json({ message: err.message }, { status: err.response?.status || 500 });
     }
   }
+}
+
+export interface GetIntegrationStatusResponse {
+  accounts: Record<BlogProviders, BlogUser | undefined>;
+  apiKeys: Record<BlogProviders, string | null>;
 }

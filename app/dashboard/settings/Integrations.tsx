@@ -1,19 +1,21 @@
 "use client";
+import { GetIntegrationStatusResponse } from "@/app/api/get-integrated-blogs/route";
 import DevToLogoSrc from "@/assets/logos/dev-to.png";
 import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
 import MediumLogoSrc from "@/assets/logos/medium.png";
 import { Conditional } from "@/components/Conditional";
 import Icon from "@/components/Icon";
-import { BlockLoader, SectionLoader } from "@/components/Loader";
+import { BlockLoader } from "@/components/Loader";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import { supabaseClient } from "@/lib/supabase";
-import { BlogApiKeyNames, BlogProviders, BlogUser } from "@/types";
+import { BlogApiKeyNames, BlogApiKeys, BlogProviders } from "@/types";
 import {
+  ActionIcon,
   Alert,
   Anchor,
   Avatar,
   Button,
   Card,
+  CopyButton,
   Flex,
   Group,
   Indicator,
@@ -22,18 +24,24 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import Image, { StaticImageData } from "next/image";
 import React from "react";
-import { toast } from "react-hot-toast";
+import superjson from "superjson";
 
 export default function Integrations() {
   return (
     <Stack spacing="xl">
-      <Title order={2}>Integrations</Title>
+      <Stack spacing="xs">
+        <Title order={2} color="white">
+          Integrations
+        </Title>
+        <Text className="font-medium">Your API keys are stored locally for security concerns</Text>
+      </Stack>
       <Stack spacing={50}>
         <SingleIntegration
           provider="dev.to"
@@ -60,45 +68,53 @@ export default function Integrations() {
           apiKeyName="mediumAPIKey"
           logoSrc={MediumLogoSrc}
         />
+        S
       </Stack>
     </Stack>
   );
 }
 
+export function useGetIntegratedBlogsQuery() {
+  const { apiKeys, hasMounted } = useLocalApiKeys();
+
+  return useQuery({
+    queryKey: ["get-integrated-blogs"],
+    queryFn: async () => {
+      const { accounts, apiKeys: blogApiKeys } = (
+        await axios.post<GetIntegrationStatusResponse>(
+          `/api/get-integrated-blogs`,
+          { ...apiKeys },
+          { headers: { "Content-Type": "application/json" } }
+        )
+      ).data;
+
+      return { accounts, apiKeys: blogApiKeys };
+    },
+    enabled: hasMounted,
+    useErrorBoundary: false,
+  });
+}
+
 interface UserBlogAccountDetailsProps {
   apiKey: string | null;
   provider: BlogProviders;
-  hashNodeUsername?: string;
 }
 
 function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
-  const { apiKey, provider, hashNodeUsername } = props;
-  const { isLoading, data, isError, error } = useQuery({
-    queryKey: ["get-integration-status", provider],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await axios.post<{ user: BlogUser }>(
-        `/dashboard/settings/integration-status`,
-        { provider: provider, apiKey, hashNodeUsername },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      return user;
-    },
-    enabled: !!apiKey,
-    useErrorBoundary: false,
-  });
+  const { apiKey, provider } = props;
+  const { isLoading, isError, data } = useGetIntegratedBlogsQuery();
 
   if (isLoading) return <BlockLoader />;
-  if (isError && error instanceof AxiosError && error.response?.status === 401)
-    return (
-      <Alert w="100%" icon={<Icon name="IconAlertTriangle" />} color="red">
-        {error.response.data.message}
-      </Alert>
-    );
   if (isError) return <></>;
 
-  const user = data;
+  const user = data.accounts[provider];
+
+  if (!user)
+    return (
+      <Alert w="100%" icon={<Icon name="IconAlertTriangle" />} color="red">
+        Your API key was invalid or expired
+      </Alert>
+    );
 
   return (
     <Group w="100%" align="center" noWrap>
@@ -110,9 +126,52 @@ function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
           {user.name}
         </Title>
         <Text lineClamp={1}>@{user.username}</Text>
+        <Group spacing="xs" noWrap>
+          <Text lineClamp={1} size="xs" color="dimmed">
+            {apiKey}
+          </Text>
+          <CopyButton value={apiKey as string} timeout={2000}>
+            {({ copied, copy }) => (
+              <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="right">
+                <ActionIcon size="sm" color={copied ? "blue" : "gray"} onClick={copy}>
+                  {copied ? (
+                    <Icon name="IconCheck" size="1rem" />
+                  ) : (
+                    <Icon name="IconCopy" size="1rem" />
+                  )}
+                </ActionIcon>
+              </Tooltip>
+            )}
+          </CopyButton>
+        </Group>
       </Stack>
     </Group>
   );
+}
+
+export function useLocalApiKeys() {
+  const [hasMounted, setMounted] = React.useState(false);
+
+  const defaultValue = {
+    devToAPIKey: null,
+    hashNodeAPIKey: null,
+    hashNodeUsername: null,
+    mediumAPIKey: null,
+  };
+
+  const [apiKeys, setApiKeys] = useLocalStorage<BlogApiKeys>({
+    serialize: superjson.stringify,
+    deserialize: (str) => (str === undefined ? defaultValue : superjson.parse(str)),
+    key: "api-keys",
+    defaultValue,
+  });
+
+  React.useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, [setMounted]);
+
+  return { apiKeys, setApiKeys, hasMounted };
 }
 
 interface SingleIntegrationProps {
@@ -125,85 +184,40 @@ interface SingleIntegrationProps {
   provider: BlogProviders;
 }
 
-/**
- * // TODO: Show the user data fetched through the api keys
- * // TODO: Remove api key
- * // TODO: API key expired alert
- * // TODO: Merge two endpoints into one to get the API keys + the blog user details
- */
 function SingleIntegration(props: SingleIntegrationProps) {
   const { description, logoSrc, name, apiKeyName, provider, linkUrl, secondaryLinkUrl } = props;
+
   const [apiKeyInput, setApiKeyInput] = React.useState("");
   const [hashNodeUserNameInput, setHashNodeUsernameInput] = React.useState("");
-  const { isLoading, data, isError } = useQuery({
-    queryKey: ["get-blog-api-keys"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabaseClient.auth.getUser();
 
-      const { data, error } = await supabaseClient
-        .from("profiles")
-        .select("*")
-        .eq("userId", user?.id)
-        .single();
+  const { apiKeys, setApiKeys } = useLocalApiKeys();
 
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess(data) {
-      setApiKeyInput(data[apiKeyName] || "");
-    },
-  });
   const { mutateAsync, isLoading: isUpdating } = useMutation({
     mutationKey: ["update-blog-api-keys"],
     mutationFn: async (input: { removeAPIKey?: boolean; removeHashNodeUsername?: boolean }) => {
       const { removeAPIKey = false, removeHashNodeUsername = false } = input;
-
-      const {
-        data: { user },
-      } = await supabaseClient.auth.getUser();
-
-      const { data, error } = await supabaseClient
-        .from("profiles")
-        .update({
-          [apiKeyName]: removeAPIKey ? null : apiKeyInput,
-          ...(provider === "hashNode"
-            ? { hashNodeUsername: removeHashNodeUsername ? null : hashNodeUserNameInput }
-            : {}),
-        })
-        .eq("userId", user?.id)
-        .select("*")
-        .single();
-
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-
-      return data;
+      setApiKeys((prevState) => ({
+        ...prevState,
+        [apiKeyName]: removeAPIKey ? null : apiKeyInput,
+        ...(provider === "hashNode"
+          ? { hashNodeUsername: removeHashNodeUsername ? null : hashNodeUserNameInput }
+          : {}),
+      }));
     },
   });
+
   const [opened, { open, close }] = useDisclosure(false);
   const { isOverSm } = useMediaQuery();
   const queryClient = useQueryClient();
 
-  if (isLoading) return <SectionLoader />;
-  if (isError) return <></>;
-
-  const apiKey = data[apiKeyName];
-  const hashNodeUsername = data["hashNodeUsername"];
+  const apiKey = apiKeys[apiKeyName];
+  const hashNodeUsername = apiKeys["hashNodeUsername"];
   const hasAllCredentialsToShowDetails =
     provider === "hashNode" ? !!hashNodeUsername && !!apiKey : !!apiKey;
 
   const handleSave = async () => {
     try {
       await mutateAsync({});
-      await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
       await queryClient.invalidateQueries({ queryKey: ["get-integration-status", provider] });
     } catch (err) {
       //
@@ -216,7 +230,6 @@ function SingleIntegration(props: SingleIntegrationProps) {
         removeAPIKey: true,
         removeHashNodeUsername: provider === "hashNode",
       });
-      await queryClient.invalidateQueries({ queryKey: ["get-blog-api-keys"] });
       await queryClient.invalidateQueries({ queryKey: ["get-integration-status", provider] });
       close();
     } catch (err) {
@@ -229,7 +242,9 @@ function SingleIntegration(props: SingleIntegrationProps) {
       <Stack maw={350} spacing="xs">
         <Group>
           <Image width={50} src={logoSrc} alt={`${name} logo`} />
-          <Title order={3}>{name}</Title>
+          <Title color="white" order={3}>
+            {name}
+          </Title>
         </Group>
         <Text>{description}</Text>
       </Stack>
@@ -237,13 +252,7 @@ function SingleIntegration(props: SingleIntegrationProps) {
         <Stack align="end">
           <Conditional
             condition={hasAllCredentialsToShowDetails}
-            component={
-              <UserBlogAccountDetails
-                hashNodeUsername={hashNodeUsername || undefined}
-                apiKey={apiKey}
-                provider={provider}
-              />
-            }
+            component={<UserBlogAccountDetails apiKey={apiKey} provider={provider} />}
             fallback={
               <Stack w="100%">
                 <TextInput

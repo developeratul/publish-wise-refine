@@ -64,6 +64,7 @@
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
     "showdown": "^2.1.0",
+    "superjson": "^1.12.4",
     "tailwind-merge": "^1.13.2",
     "uuid": "^9.0.0"
   },

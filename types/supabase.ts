@@ -48,24 +48,12 @@ export interface Database {
       }
       profiles: {
         Row: {
-          devToAPIKey: string | null
-          hashNodeAPIKey: string | null
-          hashNodeUsername: string | null
-          mediumAPIKey: string | null
           userId: string
         }
         Insert: {
-          devToAPIKey?: string | null
-          hashNodeAPIKey?: string | null
-          hashNodeUsername?: string | null
-          mediumAPIKey?: string | null
           userId?: string
         }
         Update: {
-          devToAPIKey?: string | null
-          hashNodeAPIKey?: string | null
-          hashNodeUsername?: string | null
-          mediumAPIKey?: string | null
           userId?: string
         }
         Relationships: [

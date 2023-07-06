@@ -19,6 +19,13 @@ export interface BlogUser {
   avatarUrl: string;
 }
 
+export interface BlogApiKeys {
+  devToAPIKey: string | null;
+  hashNodeAPIKey: string | null;
+  hashNodeUsername: string | null;
+  mediumAPIKey: string | null;
+}
+
 export type BlogStatus = Database["public"]["Enums"]["BlogStatus"];
 
 export type BlogProviders = "medium" | "dev.to" | "hashNode";

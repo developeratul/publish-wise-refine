@@ -41,13 +41,6 @@ export default function MarkdownEditor(props: { editor: Editor | null; isEditing
             <RichTextEditor.Link />
             <RichTextEditor.Unlink />
           </RichTextEditor.ControlsGroup>
-
-          <RichTextEditor.ControlsGroup>
-            <RichTextEditor.AlignLeft />
-            <RichTextEditor.AlignCenter />
-            <RichTextEditor.AlignJustify />
-            <RichTextEditor.AlignRight />
-          </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>
       )}
       <RichTextEditor.Content h="100%" />
