@@ -3,6 +3,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import BlogProvider from "./BlogProvider";
+import BlogActions from "./components/BlogActions";
 import BlogContent from "./components/BlogContent";
 import BlogHeader from "./components/BlogHeader";
 import BlogPrimaryDetails from "./components/BlogPrimaryDetails";
@@ -33,6 +34,7 @@ export default async function BlogDetailsByIdPage(props: PageProps) {
       <BlogHeader />
       <BlogPrimaryDetails />
       <BlogContent />
+      <BlogActions />
     </BlogProvider>
   );
 }
