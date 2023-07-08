@@ -68,7 +68,6 @@ export default function Integrations() {
           apiKeyName="mediumAPIKey"
           logoSrc={MediumLogoSrc}
         />
-        S
       </Stack>
     </Stack>
   );

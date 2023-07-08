@@ -1,4 +1,4 @@
-export interface DevToPublishArticleFields {
+export interface DevToArticleInput {
   title: string;
   description?: string;
   body_markdown: string;
@@ -6,7 +6,7 @@ export interface DevToPublishArticleFields {
   series?: string;
   main_image?: string;
   canonical_url?: string;
-  tags?: string;
+  tags?: string[];
 }
 
 export interface DevToPublishArticleResponse {

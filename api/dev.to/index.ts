@@ -1,6 +1,6 @@
 import { BlogUser } from "@/types";
 import Axios, { AxiosInstance } from "axios";
-import { DevToPublishArticleFields, DevToUser } from "./types";
+import { DevToArticleInput, DevToUser } from "./types";
 
 export class DevToApiClient {
   private _apiKey: string;
@@ -17,10 +17,14 @@ export class DevToApiClient {
     });
   }
 
-  public async publish(article: DevToPublishArticleFields) {
-    const {} = await this.axios.post("/articles", {
+  public async publish(article: DevToArticleInput) {
+    interface Response {
+      url: string;
+    }
+    const { data } = await this.axios.post<Response>("/articles", {
       article,
     });
+    return data;
   }
 
   public async getAuthUser(): Promise<BlogUser> {
