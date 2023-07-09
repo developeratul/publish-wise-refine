@@ -31,7 +31,6 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ message: err.message }, { status: err.response?.status });
     } else if (err instanceof Error) {
-      console.log(err);
       return NextResponse.json({ message: err.message || err }, { status: 500 });
     }
   }

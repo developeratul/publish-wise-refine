@@ -11,6 +11,7 @@ export interface HashnodeUser {
   photo: string;
   publication: {
     _id: string;
+    domain: string | null;
   };
 }
 
@@ -18,7 +19,7 @@ export interface HashNodeArticleInput {
   title: string;
   contentMarkdown: string;
   subtitle?: string;
-  tags: HashNodeTag[];
+  slug: string;
+  tags: Omit<HashNodeTag, "slug" | "name">[];
   isRepublished?: { originalArticleURL: string };
-  isPartOfPublication: { publicationId: string };
 }

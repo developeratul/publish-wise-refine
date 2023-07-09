@@ -71,14 +71,20 @@ model Profile {
 }
 
 model Blog {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  status     BlogStatus @default(DRAFT)
-  title      String
-  content    String?    @default("")
-  tags       Json?
-  created_at DateTime   @default(now()) @db.Timestamptz(6)
-  userId     String     @map("user_id") @db.Uuid
-  user       User       @relation(fields: [userId], references: [id])
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status            BlogStatus @default(DRAFT)
+  title             String
+  content           String?    @default("")
+  tags              Json?
+  created_at        DateTime   @default(now()) @db.Timestamptz(6)
+  userId            String     @map("user_id") @db.Uuid
+  user              User       @relation(fields: [userId], references: [id])
+  publishingDetails Json?
+
+  // Published blog urls
+  hashNodeBlogUrl String?
+  devToBlogUrl    String?
+  mediumBlogUrl   String?
 
   @@map("blogs")
   @@schema("public")

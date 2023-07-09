@@ -13,7 +13,11 @@ export interface Database {
         Row: {
           content: string | null
           created_at: string
+          devToBlogUrl: string | null
+          hashNodeBlogUrl: string | null
           id: string
+          mediumBlogUrl: string | null
+          publishingDetails: Json | null
           status: Database["public"]["Enums"]["BlogStatus"]
           tags: Json | null
           title: string
@@ -22,7 +26,11 @@ export interface Database {
         Insert: {
           content?: string | null
           created_at?: string
+          devToBlogUrl?: string | null
+          hashNodeBlogUrl?: string | null
           id?: string
+          mediumBlogUrl?: string | null
+          publishingDetails?: Json | null
           status?: Database["public"]["Enums"]["BlogStatus"]
           tags?: Json | null
           title: string
@@ -31,7 +39,11 @@ export interface Database {
         Update: {
           content?: string | null
           created_at?: string
+          devToBlogUrl?: string | null
+          hashNodeBlogUrl?: string | null
           id?: string
+          mediumBlogUrl?: string | null
+          publishingDetails?: Json | null
           status?: Database["public"]["Enums"]["BlogStatus"]
           tags?: Json | null
           title?: string

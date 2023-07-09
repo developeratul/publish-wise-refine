@@ -1,4 +1,4 @@
-import { BlogUser } from "@/types";
+import { BlogUser, PublishBlogResponse } from "@/types";
 import Axios, { AxiosInstance } from "axios";
 import { HashNodeArticleInput, HashNodeTag, HashnodeUser } from "./types";
 
@@ -17,21 +17,59 @@ export class HashNodeApiClient {
     });
   }
 
-  public async publish(input: HashNodeArticleInput) {
+  public async publish(
+    username: string,
+    input: HashNodeArticleInput
+  ): Promise<PublishBlogResponse> {
     interface Response {
-      message: string;
+      data: {
+        createStory: {
+          message: string;
+          post: {
+            slug: string;
+            author: {
+              username: string;
+            };
+            publication: {
+              domain: string;
+            };
+          };
+        };
+      };
     }
-    const { data } = await this.axios.post<Response>("/", {
+    const { publication } = await this.getAuthUser(username);
+    const {
+      data: {
+        data: { createStory: data },
+      },
+    } = await this.axios.post<Response>("/", {
       query: `
         mutation PublishBlog($input: CreateStoryInput!) {
           createStory(input: $input) {
-            message
+            post {
+         			slug
+              author {
+                username
+              }
+              publication {
+                domain
+              }
+            }
           }
         }
       `,
-      variables: { input },
+      variables: { input: { ...input, isPartOfPublication: { publicationId: publication._id } } },
     });
-    return data;
+    const articleUrl = await this.getArticleUrl(data.post.author.username, data.post.slug);
+    return { url: articleUrl };
+  }
+
+  public async getArticleUrl(username: string, slug: string) {
+    const {
+      publication: { domain },
+    } = await this.getAuthUser(username);
+    let blogDomain = domain ? domain : `${username}.hashnode.dev`;
+    return `http://${blogDomain}/${slug}`;
   }
 
   public async getAvailableTags(): Promise<{ tags: HashNodeTag[] }> {
@@ -56,7 +94,7 @@ export class HashNodeApiClient {
 
   public async getAuthUser(hashNodeUsername: string): Promise<
     BlogUser & {
-      publication: { _id: string };
+      publication: { _id: string; domain: string | null };
     }
   > {
     const {
@@ -75,6 +113,7 @@ export class HashNodeApiClient {
             photo
             publication {
               _id
+              domain
             }
           }
         }

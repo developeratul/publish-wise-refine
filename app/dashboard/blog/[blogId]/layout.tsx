@@ -9,7 +9,7 @@ export default function BlogDetailsPageLayout(props: AppProps) {
   const [scroll, scrollTo] = useWindowScroll();
   return (
     <Container p={0} size="xl">
-      <Affix position={{ bottom: rem(20), right: rem(20) }}>
+      <Affix position={{ bottom: rem(60), right: rem(10) }}>
         <Transition transition="fade" mounted={scroll.y > 500}>
           {(transitionStyles) => (
             <Stack style={transitionStyles} spacing={0}>

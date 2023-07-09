@@ -1,4 +1,4 @@
-import { BlogUser } from "@/types";
+import { BlogUser, PublishBlogResponse } from "@/types";
 import Axios, { AxiosInstance } from "axios";
 import { DevToArticleInput, DevToUser } from "./types";
 
@@ -9,7 +9,7 @@ export class DevToApiClient {
   constructor(_apiKey: string) {
     this._apiKey = _apiKey;
     this.axios = Axios.create({
-      baseURL: "http://dev.to/api",
+      baseURL: "https://dev.to/api",
       headers: {
         "api-key": this._apiKey,
         accept: "application/vnd.forem.api-v1+json",
@@ -17,14 +17,14 @@ export class DevToApiClient {
     });
   }
 
-  public async publish(article: DevToArticleInput) {
+  public async publish(article: DevToArticleInput): Promise<PublishBlogResponse> {
     interface Response {
       url: string;
     }
     const { data } = await this.axios.post<Response>("/articles", {
       article,
     });
-    return data;
+    return { url: data.url };
   }
 
   public async getAuthUser(): Promise<BlogUser> {

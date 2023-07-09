@@ -1,4 +1,4 @@
-import { BlogUser } from "@/types";
+import { BlogUser, PublishBlogResponse } from "@/types";
 import Axios, { AxiosInstance } from "axios";
 import { MediumUser } from "./types";
 
@@ -17,11 +17,9 @@ export class MediumApiClient {
     });
   }
 
-  // public async publish(article) {
-  //   const {} = await this.axios.post("/articles", {
-  //     article,
-  //   });
-  // }
+  public async publish(): Promise<PublishBlogResponse> {
+    return { url: "" };
+  }
 
   public async getAuthUser(): Promise<BlogUser> {
     const {

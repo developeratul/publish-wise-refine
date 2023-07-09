@@ -1,13 +1,15 @@
 "use client";
-import { HashNodeTag } from "@/api/hashnode/types";
+import { DevToArticleInput } from "@/api/dev.to/types";
+import { HashNodeArticleInput, HashNodeTag } from "@/api/hashnode/types";
 import { useGetIntegratedBlogsQuery, useLocalApiKeys } from "@/app/dashboard/settings/Integrations";
 import DevToLogoSrc from "@/assets/logos/dev-to.png";
 import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
 import MediumLogoSrc from "@/assets/logos/medium.png";
 import Icon from "@/components/Icon";
 import { FullPageRelativeLoader } from "@/components/Loader";
-import { generateSlug } from "@/helpers/blog";
-import { BlogProviders } from "@/types";
+import { generateSlug, htmlToMarkdown } from "@/helpers/blog";
+import { supabaseClient } from "@/lib/supabase";
+import { BlogProviders, PublishBlogResponse } from "@/types";
 import {
   Button,
   Drawer,
@@ -16,7 +18,6 @@ import {
   MultiSelect,
   ScrollArea,
   Select,
-  SelectItem,
   Stack,
   Text,
   TextInput,
@@ -28,17 +29,20 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Image, { StaticImageData } from "next/image";
 import React, { forwardRef } from "react";
+import { toast } from "react-hot-toast";
 import { useBlogContext } from "../BlogProvider";
 
-interface PublishBlogForm {
+export interface PublishBlogForm {
   selectedBlogs: BlogProviders[];
   primaryBlog?: BlogProviders;
   hashNode: {
     slug: string;
     subtitle?: string;
-    tags: SelectItem[];
+    tags: string[];
   };
-  "dev.to": {};
+  devTo: {
+    tags: string[];
+  };
 }
 
 interface InitialValue {
@@ -64,7 +68,7 @@ export default function PublishBlog() {
     initialValues: {
       selectedBlogs: [],
       hashNode: { slug: generateSlug(blog.title), tags: [] },
-      "dev.to": {},
+      devTo: { tags: [] },
     },
     validate: {
       selectedBlogs: hasLength({ min: 1 }, "Please select at least select one blog for publishing"),
@@ -74,6 +78,9 @@ export default function PublishBlog() {
           : "Your primary blog was not selected for publishing",
 
       hashNode: {
+        tags: hasLength({ min: 1 }, "Please select at least one tag"),
+      },
+      devTo: {
         tags: hasLength({ min: 1 }, "Please select at least one tag"),
       },
     },
@@ -129,7 +136,10 @@ SelectItem.displayName = "SelectItem";
 
 function DrawerContent() {
   const { isLoading, isError, data } = useGetIntegratedBlogsQuery();
+  const [isProcessing, setProcessing] = React.useState(false);
+  const { blog } = useBlogContext();
   const { form } = usePublishBlog();
+  const { apiKeys } = useLocalApiKeys();
 
   if (isLoading) return <FullPageRelativeLoader />;
   if (isError) return <></>;
@@ -159,9 +169,109 @@ function DrawerContent() {
   ];
 
   const handlePublishBlog = async (values: PublishBlogForm) => {
+    const { primaryBlog, devTo, hashNode, selectedBlogs } = values;
+
+    const devToPayload: DevToArticleInput & { apiKey: string } = {
+      title: blog.title,
+      body_markdown: htmlToMarkdown(blog.content || ""),
+      tags: devTo.tags,
+      apiKey: apiKeys.devToAPIKey as string,
+    };
+
+    const hashNodePayload: HashNodeArticleInput & { apiKey: string; username: string } = {
+      title: blog.title,
+      contentMarkdown: htmlToMarkdown(blog.content || ""),
+      tags: hashNode.tags.map((tagId) => ({ _id: tagId })),
+      slug: hashNode.slug,
+      subtitle: hashNode.subtitle,
+      apiKey: apiKeys.hashNodeAPIKey as string,
+      username: apiKeys.hashNodeUsername as string,
+    };
+
+    const publishBlogPayloads: Record<BlogProviders, object> = {
+      "dev.to": devToPayload,
+      hashNode: hashNodePayload,
+      medium: {},
+    };
+
+    const databaseUrlFieldNames: Record<BlogProviders, string> = {
+      "dev.to": "devToBlogUrl",
+      hashNode: "hashNodeBlogUrl",
+      medium: "mediumBlogUrl",
+    };
+
     try {
+      setProcessing(true);
+
+      // First publish into the primary blog
+      const {
+        data: { url },
+      } = await toast.promise(
+        axios.post<PublishBlogResponse>(
+          `/api/${primaryBlog}/publish`,
+          publishBlogPayloads[primaryBlog as BlogProviders]
+        ),
+        {
+          loading: `Publishing to ${primaryBlog}`,
+          error: (err) => err.response?.data?.message,
+          success: `Successfully published to ${primaryBlog}`,
+        }
+      );
+
+      await supabaseClient
+        .from("blogs")
+        .update({ [databaseUrlFieldNames[primaryBlog as BlogProviders]]: url })
+        .eq("id", blog.id);
+
+      // Then publish into the remaining other blogs
+      const remainingBlogs = selectedBlogs.filter((blogProvider) => blogProvider !== primaryBlog);
+      const canonicals: Record<BlogProviders, object> = {
+        "dev.to": {
+          canonical_url: url,
+        },
+        hashNode: {
+          isRepublished: {
+            originalArticleURL: url,
+          },
+        },
+        medium: {},
+      };
+
+      for (const blogProvider of remainingBlogs) {
+        const payload = publishBlogPayloads[blogProvider];
+        const canonical = canonicals[blogProvider];
+        const databaseUrlFieldName = databaseUrlFieldNames[blogProvider];
+
+        const {
+          data: { url },
+        } = await toast.promise(
+          axios.post<PublishBlogResponse>(`/api/${blogProvider}/publish`, {
+            ...payload,
+            ...canonical,
+          }),
+          {
+            loading: `Publishing to ${blogProvider}`,
+            error: (err) => err.response?.data?.message,
+            success: `Successfully published to ${blogProvider}`,
+          }
+        );
+
+        await supabaseClient
+          .from("blogs")
+          .update({ [databaseUrlFieldName]: url })
+          .eq("id", blog.id);
+      }
+
+      await supabaseClient
+        .from("blogs")
+        .update({ publishingDetails: JSON.stringify(values) })
+        .eq("id", blog.id);
+
+      toast.success("Blog publishing successful");
     } catch (err) {
       //
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -197,7 +307,12 @@ function DrawerContent() {
         />
         <HashNodeDetails />
         <DevToDetails />
-        <Button rightIcon={<Icon name="IconBookUpload" />} form="publish-form" type="submit">
+        <Button
+          loading={isProcessing}
+          rightIcon={<Icon name="IconBookUpload" />}
+          form="publish-form"
+          type="submit"
+        >
           Publish
         </Button>
       </form>
@@ -262,10 +377,25 @@ function DevToDetails() {
       values: { selectedBlogs },
     },
   } = usePublishBlog();
-  const isHashNodeSelected = selectedBlogs.includes("dev.to");
+  const isBlogSelected = selectedBlogs.includes("dev.to");
 
-  if (!isHashNodeSelected) return <></>;
+  if (!isBlogSelected) return <></>;
 
-  // * Dev.to does not require any additional details so blank!
-  return <></>;
+  return (
+    <Stack w="100%">
+      <Title order={4}>Dev.to details</Title>
+      <Stack spacing="xs">
+        <MultiSelect
+          {...getInputProps("devTo.tags")}
+          label="Tags"
+          clearable
+          searchable
+          creatable
+          getCreateLabel={(query) => `+ Add ${query}`}
+          placeholder="Select"
+          data={getInputProps("devTo.tags").value}
+        />
+      </Stack>
+    </Stack>
+  );
 }

@@ -31,3 +31,7 @@ export type BlogStatus = Database["public"]["Enums"]["BlogStatus"];
 export type BlogProviders = "medium" | "dev.to" | "hashNode";
 
 export type BlogApiKeyNames = "mediumAPIKey" | "devToAPIKey" | "hashNodeAPIKey";
+
+export interface PublishBlogResponse {
+  url: string;
+}
