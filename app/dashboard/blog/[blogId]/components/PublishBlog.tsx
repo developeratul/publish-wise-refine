@@ -282,7 +282,7 @@ function DrawerContent(props: { close: () => void }) {
           }
 
           const {
-            data: { url },
+            data: { url, id },
           } = await toast.promise(
             axios.post<PublishBlogResponse>(`/api/${blogProvider}/publish`, {
               ...payload,
@@ -297,7 +297,7 @@ function DrawerContent(props: { close: () => void }) {
 
           // update the url and id of the blog
           databaseBlogUpdates[databaseUrlFieldName as DatabasePublishBlogFields] = url;
-          databaseBlogUpdates[databaseIdFieldName as DatabasePublishBlogFields] = url;
+          databaseBlogUpdates[databaseIdFieldName as DatabasePublishBlogFields] = id;
 
           setBlogUploadedPlatforms((pre) => [...pre, blogProvider]);
           setDatabaseBlogUpdateState(databaseBlogUpdates);
