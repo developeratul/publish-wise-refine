@@ -9,7 +9,7 @@ import Icon from "@/components/Icon";
 import { FullPageRelativeLoader } from "@/components/Loader";
 import { generateSlug, htmlToMarkdown } from "@/helpers/blog";
 import { supabaseClient } from "@/lib/supabase";
-import { BlogProviders, PublishBlogResponse } from "@/types";
+import { BlogProviders, DatabasePublishBlogFields, PublishBlogResponse } from "@/types";
 import {
   Button,
   Drawer,
@@ -28,6 +28,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Image, { StaticImageData } from "next/image";
+import { useRouter } from "next/navigation";
 import React, { forwardRef } from "react";
 import { toast } from "react-hot-toast";
 import { useBlogContext } from "../BlogProvider";
@@ -44,6 +45,8 @@ export interface PublishBlogForm {
     tags: string[];
   };
 }
+
+type DatabaseBlogUpdates = Partial<Record<DatabasePublishBlogFields, string>>;
 
 interface InitialValue {
   form: UseFormReturnType<PublishBlogForm>;
@@ -63,7 +66,7 @@ function usePublishBlog() {
 
 export default function PublishBlog() {
   const [opened, { open, close }] = useDisclosure(false);
-  const { blog } = useBlogContext();
+  const { form: blogEditingForm, blog } = useBlogContext();
   const form = useForm<PublishBlogForm>({
     initialValues: {
       selectedBlogs: [],
@@ -76,13 +79,13 @@ export default function PublishBlog() {
         value && values.selectedBlogs.includes(value)
           ? null
           : "Your primary blog was not selected for publishing",
-
-      hashNode: {
-        tags: hasLength({ min: 1 }, "Please select at least one tag"),
-      },
-      devTo: {
-        tags: hasLength({ min: 1 }, "Please select at least one tag"),
-      },
+      // hashNode: {
+      //   slug: isNotEmpty("Slug is required"),
+      //   tags: hasLength({ min: 1 }, "Please select at least one tag"),
+      // },
+      // devTo: {
+      //   tags: hasLength({ min: 1 }, "Please select at least one tag"),
+      // },
     },
   });
   return (
@@ -100,7 +103,7 @@ export default function PublishBlog() {
           withinPortal
           title="Publish blog"
         >
-          <DrawerContent />
+          <DrawerContent close={close} />
         </Drawer>
       </PublishBlogContext.Provider>
     </React.Fragment>
@@ -134,12 +137,18 @@ const SelectItem = forwardRef<HTMLDivElement, ItemProps>(
 
 SelectItem.displayName = "SelectItem";
 
-function DrawerContent() {
+function DrawerContent(props: { close: () => void }) {
+  const { close } = props;
   const { isLoading, isError, data } = useGetIntegratedBlogsQuery();
   const [isProcessing, setProcessing] = React.useState(false);
-  const { blog } = useBlogContext();
+  const { blog, form: blogEditingForm } = useBlogContext();
+  const [blogUploadedPlatforms, setBlogUploadedPlatforms] = React.useState<BlogProviders[]>([]);
+  const [primaryBlogUrlState, setPrimaryBlogUrlState] = React.useState("");
+  const [databaseBlogUpdatesState, setDatabaseBlogUpdateState] =
+    React.useState<DatabaseBlogUpdates>({});
   const { form } = usePublishBlog();
   const { apiKeys } = useLocalApiKeys();
+  const router = useRouter();
 
   if (isLoading) return <FullPageRelativeLoader />;
   if (isError) return <></>;
@@ -169,18 +178,24 @@ function DrawerContent() {
   ];
 
   const handlePublishBlog = async (values: PublishBlogForm) => {
+    if (blog.status === "PUBLISHED") {
+      return toast.error("Blog already published");
+    }
+
     const { primaryBlog, devTo, hashNode, selectedBlogs } = values;
+
+    const blogContentMarkdown = htmlToMarkdown(blogEditingForm.values.content || "");
 
     const devToPayload: DevToArticleInput & { apiKey: string } = {
       title: blog.title,
-      body_markdown: htmlToMarkdown(blog.content || ""),
+      body_markdown: blogContentMarkdown,
       tags: devTo.tags,
       apiKey: apiKeys.devToAPIKey as string,
     };
 
     const hashNodePayload: HashNodeArticleInput & { apiKey: string; username: string } = {
       title: blog.title,
-      contentMarkdown: htmlToMarkdown(blog.content || ""),
+      contentMarkdown: blogContentMarkdown,
       tags: hashNode.tags.map((tagId) => ({ _id: tagId })),
       slug: hashNode.slug,
       subtitle: hashNode.subtitle,
@@ -200,73 +215,109 @@ function DrawerContent() {
       medium: "mediumBlogUrl",
     };
 
+    const databaseIdFieldNames: Record<BlogProviders, string> = {
+      "dev.to": "devToArticleId",
+      hashNode: "hashNodeArticleId",
+      medium: "",
+    };
+
     try {
       setProcessing(true);
 
-      // First publish into the primary blog
-      const {
-        data: { url },
-      } = await toast.promise(
-        axios.post<PublishBlogResponse>(
-          `/api/${primaryBlog}/publish`,
-          publishBlogPayloads[primaryBlog as BlogProviders]
-        ),
-        {
-          loading: `Publishing to ${primaryBlog}`,
-          error: (err) => err.response?.data?.message,
-          success: `Successfully published to ${primaryBlog}`,
-        }
-      );
+      // Contain the updates of in the database regarding uploaded blogs
+      const databaseBlogUpdates: DatabaseBlogUpdates = databaseBlogUpdatesState;
 
-      await supabaseClient
-        .from("blogs")
-        .update({ [databaseUrlFieldNames[primaryBlog as BlogProviders]]: url })
-        .eq("id", blog.id);
+      let primaryBlogUrl = primaryBlogUrlState;
+
+      // First publish into the primary blog if in already uploaded
+      if (!blogUploadedPlatforms.includes(primaryBlog as BlogProviders)) {
+        const {
+          data: { url, id },
+        } = await toast.promise(
+          axios.post<PublishBlogResponse>(
+            `/api/${primaryBlog}/publish`,
+            publishBlogPayloads[primaryBlog as BlogProviders]
+          ),
+          {
+            loading: `Publishing to ${primaryBlog}`,
+            error: (err) => err.response?.data?.message,
+            success: `Successfully published to ${primaryBlog}`,
+          }
+        );
+
+        // Update the database primary blog id and url
+        databaseBlogUpdates[
+          databaseIdFieldNames[primaryBlog as BlogProviders] as DatabasePublishBlogFields
+        ] = id as string;
+        databaseBlogUpdates[
+          databaseUrlFieldNames[primaryBlog as BlogProviders] as DatabasePublishBlogFields
+        ] = url as string;
+
+        primaryBlogUrl = url;
+
+        setBlogUploadedPlatforms((pre) => [...pre, primaryBlog as BlogProviders]);
+        setPrimaryBlogUrlState(primaryBlogUrl);
+        setDatabaseBlogUpdateState(databaseBlogUpdates);
+      }
 
       // Then publish into the remaining other blogs
       const remainingBlogs = selectedBlogs.filter((blogProvider) => blogProvider !== primaryBlog);
       const canonicals: Record<BlogProviders, object> = {
-        "dev.to": {
-          canonical_url: url,
-        },
-        hashNode: {
-          isRepublished: {
-            originalArticleURL: url,
-          },
-        },
+        "dev.to": { canonical_url: primaryBlogUrl },
+        hashNode: { isRepublished: { originalArticleURL: primaryBlogUrl } },
         medium: {},
       };
 
-      for (const blogProvider of remainingBlogs) {
-        const payload = publishBlogPayloads[blogProvider];
-        const canonical = canonicals[blogProvider];
-        const databaseUrlFieldName = databaseUrlFieldNames[blogProvider];
+      // Only if the primary blog was uploaded successfully
+      if (primaryBlogUrl) {
+        for (const blogProvider of remainingBlogs) {
+          const payload = publishBlogPayloads[blogProvider];
+          const canonical = canonicals[blogProvider];
+          const databaseUrlFieldName = databaseUrlFieldNames[blogProvider];
+          const databaseIdFieldName = databaseIdFieldNames[blogProvider];
 
-        const {
-          data: { url },
-        } = await toast.promise(
-          axios.post<PublishBlogResponse>(`/api/${blogProvider}/publish`, {
-            ...payload,
-            ...canonical,
-          }),
-          {
-            loading: `Publishing to ${blogProvider}`,
-            error: (err) => err.response?.data?.message,
-            success: `Successfully published to ${blogProvider}`,
+          // If the blog is already uploaded, we don't want to upload it again
+          if (blogUploadedPlatforms.includes(blogProvider)) {
+            continue;
           }
-        );
 
-        await supabaseClient
-          .from("blogs")
-          .update({ [databaseUrlFieldName]: url })
-          .eq("id", blog.id);
+          const {
+            data: { url },
+          } = await toast.promise(
+            axios.post<PublishBlogResponse>(`/api/${blogProvider}/publish`, {
+              ...payload,
+              ...canonical,
+            }),
+            {
+              loading: `Publishing to ${blogProvider}`,
+              error: (err) => err.response?.data?.message,
+              success: `Successfully published to ${blogProvider}`,
+            }
+          );
+
+          // update the url and id of the blog
+          databaseBlogUpdates[databaseUrlFieldName as DatabasePublishBlogFields] = url;
+          databaseBlogUpdates[databaseIdFieldName as DatabasePublishBlogFields] = url;
+
+          setBlogUploadedPlatforms((pre) => [...pre, blogProvider]);
+          setDatabaseBlogUpdateState(databaseBlogUpdates);
+        }
       }
 
+      // Finally update the blog status and update some other fields e.g. urls, timestamp
       await supabaseClient
         .from("blogs")
-        .update({ publishingDetails: JSON.stringify(values) })
+        .update({
+          publishingDetails: JSON.stringify(values),
+          status: "PUBLISHED",
+          last_published_at: new Date().toLocaleDateString(),
+          ...databaseBlogUpdates,
+        })
         .eq("id", blog.id);
 
+      close();
+      form.reset();
+      router.refresh();
       toast.success("Blog publishing successful");
     } catch (err) {
       //
@@ -303,7 +354,7 @@ function DrawerContent() {
           placeholder="Select"
           withinPortal
           itemComponent={SelectItem}
-          description="Where should the blog be primarily uploaded?"
+          description="This is where your blog will be uploaded at first"
         />
         <HashNodeDetails />
         <DevToDetails />
@@ -351,7 +402,6 @@ function HashNodeDetails() {
       <Title order={4}>HashNode details</Title>
       <Stack spacing="xs">
         <TextInput
-          required
           icon={<Icon name="IconSlash" />}
           label="Slug"
           {...getInputProps("hashNode.slug")}

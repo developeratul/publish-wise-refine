@@ -101,9 +101,9 @@ interface UserBlogAccountDetailsProps {
 
 function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
   const { apiKey, provider } = props;
-  const { isLoading, isError, data } = useGetIntegratedBlogsQuery();
+  const { isLoading, isError, data, isFetchedAfterMount } = useGetIntegratedBlogsQuery();
 
-  if (isLoading) return <BlockLoader />;
+  if (isLoading || !isFetchedAfterMount) return <BlockLoader />;
   if (isError) return <></>;
 
   const user = data.accounts[provider];
@@ -118,7 +118,7 @@ function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
   return (
     <Group w="100%" align="center" noWrap>
       <Indicator position="bottom-end" offset={10} size={15} color="green">
-        <Avatar size="xl" radius="xl" src={user.avatarUrl} />
+        <Avatar size="xl" radius="100%" src={user.avatarUrl} />
       </Indicator>
       <Stack spacing="xs">
         <Title lineClamp={1} order={3} color="white">
@@ -167,7 +167,9 @@ export function useLocalApiKeys() {
 
   React.useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+    };
   }, [setMounted]);
 
   return { apiKeys, setApiKeys, hasMounted };

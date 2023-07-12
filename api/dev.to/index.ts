@@ -19,12 +19,13 @@ export class DevToApiClient {
 
   public async publish(article: DevToArticleInput): Promise<PublishBlogResponse> {
     interface Response {
+      id: number;
       url: string;
     }
     const { data } = await this.axios.post<Response>("/articles", {
       article,
     });
-    return { url: data.url };
+    return { url: data.url, id: data.id.toString() };
   }
 
   public async getAuthUser(): Promise<BlogUser> {

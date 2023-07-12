@@ -33,5 +33,13 @@ export type BlogProviders = "medium" | "dev.to" | "hashNode";
 export type BlogApiKeyNames = "mediumAPIKey" | "devToAPIKey" | "hashNodeAPIKey";
 
 export interface PublishBlogResponse {
+  id: string;
   url: string;
 }
+
+export type DatabasePublishBlogFields =
+  | "hashNodeBlogUrl"
+  | "devToBlogUrl"
+  | "mediumBlogUrl"
+  | "hashNodeArticleId"
+  | "devToArticleId";

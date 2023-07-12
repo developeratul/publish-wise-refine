@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
     const client = new DevToApiClient(apiKey);
 
-    const { url } = await client.publish({
+    const { id, url } = await client.publish({
       title,
       body_markdown,
       canonical_url,
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       published: true,
     });
 
-    return NextResponse.json({ url });
+    return NextResponse.json({ id, url });
   } catch (err) {
     if (err instanceof AxiosError) {
       if (err.response?.status === 401) {
@@ -32,7 +32,10 @@ export async function POST(req: Request) {
           { status: 401 }
         );
       }
-      return NextResponse.json({ message: err.message }, { status: err.response?.status || 500 });
+      return NextResponse.json(
+        { message: err.response?.data.error },
+        { status: err.response?.status || 500 }
+      );
     }
   }
 }

@@ -1,5 +1,7 @@
 "use client";
 import { badgeStyles } from "@/app/dashboard/components/Blogs";
+import DevToLogoSrc from "@/assets/logos/dev-to.png";
+import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
 import Icon from "@/components/Icon";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import {
@@ -13,6 +15,7 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
+import Image from "next/image";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogPrimaryDetails() {
@@ -60,6 +63,28 @@ export default function BlogPrimaryDetails() {
           </Group>
           <BlogTags />
         </Flex>
+        {blog.status === "PUBLISHED" && (
+          <Flex align="center">
+            <Group noWrap className="w-full max-w-[250px]" align="center">
+              <Icon size={22} name="IconBookUpload" />
+              <Text size="md" className="font-medium">
+                Published on
+              </Text>
+            </Group>
+            <div className="flex w-full gap-2">
+              {blog.devToBlogUrl && (
+                <a href={blog.devToBlogUrl} target="_blank" rel="noopener noreferrer">
+                  <Image width={25} src={DevToLogoSrc} alt="Dev.to logo" />
+                </a>
+              )}
+              {blog.hashNodeBlogUrl && (
+                <a href={blog.hashNodeBlogUrl} target="_blank" rel="noopener noreferrer">
+                  <Image width={25} src={HashNodeLogoSrc} alt="HashNode logo" />
+                </a>
+              )}
+            </div>
+          </Flex>
+        )}
       </Stack>
     </Stack>
   );

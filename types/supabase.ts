@@ -13,9 +13,12 @@ export interface Database {
         Row: {
           content: string | null
           created_at: string
+          devToArticleId: string | null
           devToBlogUrl: string | null
+          hashNodeArticleId: string | null
           hashNodeBlogUrl: string | null
           id: string
+          last_published_at: string | null
           mediumBlogUrl: string | null
           publishingDetails: Json | null
           status: Database["public"]["Enums"]["BlogStatus"]
@@ -26,9 +29,12 @@ export interface Database {
         Insert: {
           content?: string | null
           created_at?: string
+          devToArticleId?: string | null
           devToBlogUrl?: string | null
+          hashNodeArticleId?: string | null
           hashNodeBlogUrl?: string | null
           id?: string
+          last_published_at?: string | null
           mediumBlogUrl?: string | null
           publishingDetails?: Json | null
           status?: Database["public"]["Enums"]["BlogStatus"]
@@ -39,9 +45,12 @@ export interface Database {
         Update: {
           content?: string | null
           created_at?: string
+          devToArticleId?: string | null
           devToBlogUrl?: string | null
+          hashNodeArticleId?: string | null
           hashNodeBlogUrl?: string | null
           id?: string
+          last_published_at?: string | null
           mediumBlogUrl?: string | null
           publishingDetails?: Json | null
           status?: Database["public"]["Enums"]["BlogStatus"]

@@ -21,32 +21,33 @@ export class HashNodeApiClient {
     username: string,
     input: HashNodeArticleInput
   ): Promise<PublishBlogResponse> {
-    interface Response {
-      data: {
-        createStory: {
-          message: string;
-          post: {
-            slug: string;
-            author: {
-              username: string;
-            };
-            publication: {
-              domain: string;
-            };
-          };
-        };
-      };
-    }
+    // type Response = {
+    //   data: {
+    //     createStory: {
+    //       message: string;
+    //       post: {
+    //         slug: string;
+    //         author: {
+    //           username: string;
+    //         };
+    //         publication: {
+    //           domain: string;
+    //         };
+    //       };
+    //     };
+    //   };
+    // };
+
     const { publication } = await this.getAuthUser(username);
-    const {
-      data: {
-        data: { createStory: data },
-      },
-    } = await this.axios.post<Response>("/", {
+
+    if (!publication) throw new Error("You don't have any blog created on HashNode");
+
+    const { data } = await this.axios.post<any>("/", {
       query: `
         mutation PublishBlog($input: CreateStoryInput!) {
           createStory(input: $input) {
             post {
+              _id
          			slug
               author {
                 username
@@ -60,8 +61,20 @@ export class HashNodeApiClient {
       `,
       variables: { input: { ...input, isPartOfPublication: { publicationId: publication._id } } },
     });
-    const articleUrl = await this.getArticleUrl(data.post.author.username, data.post.slug);
-    return { url: articleUrl };
+
+    if (data.errors?.length) {
+      throw new Error(data.errors[0].message);
+    }
+
+    const {
+      data: {
+        createStory: { post },
+      },
+    } = data;
+
+    const articleUrl = await this.getArticleUrl(post.author.username, post.slug);
+
+    return { url: articleUrl, id: post._id };
   }
 
   public async getArticleUrl(username: string, slug: string) {

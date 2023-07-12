@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     const client = new HashNodeApiClient(apiKey);
 
-    const { url } = await client.publish(username, {
+    const { id, url } = await client.publish(username, {
       title,
       contentMarkdown,
       slug,
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       subtitle,
     });
 
-    return NextResponse.json({ url });
+    return NextResponse.json({ id, url });
   } catch (err) {
     if (err instanceof AxiosError) {
       if (err.response?.status === 401) {
@@ -40,6 +40,8 @@ export async function POST(req: Request) {
         { message: err.response?.data?.errors[0]?.message || err.message },
         { status: err.response?.status || 500 }
       );
+    } else if (err instanceof Error) {
+      return NextResponse.json({ message: err.message }, { status: 500 });
     }
   }
 }
