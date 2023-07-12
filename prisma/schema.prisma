@@ -85,6 +85,7 @@ model Blog {
   // published article ids
   hashNodeArticleId String?
   devToArticleId    String?
+  mediumArticleId   String?
 
   // Published blog urls
   hashNodeBlogUrl String?

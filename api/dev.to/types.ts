@@ -20,3 +20,5 @@ export interface DevToUser {
   name: string;
   profile_image: string;
 }
+
+export type DevToRepublishArticle = Omit<DevToArticleInput, "canonical_url">;

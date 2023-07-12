@@ -19,6 +19,7 @@ export interface Database {
           hashNodeBlogUrl: string | null
           id: string
           last_published_at: string | null
+          mediumArticleId: string | null
           mediumBlogUrl: string | null
           publishingDetails: Json | null
           status: Database["public"]["Enums"]["BlogStatus"]
@@ -35,6 +36,7 @@ export interface Database {
           hashNodeBlogUrl?: string | null
           id?: string
           last_published_at?: string | null
+          mediumArticleId?: string | null
           mediumBlogUrl?: string | null
           publishingDetails?: Json | null
           status?: Database["public"]["Enums"]["BlogStatus"]
@@ -51,6 +53,7 @@ export interface Database {
           hashNodeBlogUrl?: string | null
           id?: string
           last_published_at?: string | null
+          mediumArticleId?: string | null
           mediumBlogUrl?: string | null
           publishingDetails?: Json | null
           status?: Database["public"]["Enums"]["BlogStatus"]

@@ -1,6 +1,11 @@
 import { BlogUser, PublishBlogResponse } from "@/types";
 import Axios, { AxiosInstance } from "axios";
-import { HashNodeArticleInput, HashNodeTag, HashnodeUser } from "./types";
+import {
+  HashNodeArticleInput,
+  HashNodeTag,
+  HashnodeUser,
+  RepublishHashNodeArticleInput,
+} from "./types";
 
 export class HashNodeApiClient {
   private _apiKey: string;
@@ -69,6 +74,49 @@ export class HashNodeApiClient {
     const {
       data: {
         createStory: { post },
+      },
+    } = data;
+
+    const articleUrl = await this.getArticleUrl(post.author.username, post.slug);
+
+    return { url: articleUrl, id: post._id };
+  }
+
+  public async republish(postId: string, username: string, input: RepublishHashNodeArticleInput) {
+    const { publication } = await this.getAuthUser(username);
+
+    if (!publication) throw new Error("You don't have any blog created on HashNode");
+
+    const { data } = await this.axios.post<any>("/", {
+      query: `
+        mutation UpdateStory($postId: String!, $input: UpdateStoryInput!) {
+          updateStory(postId: $postId, input: $input) {
+            post {
+              _id
+              slug
+              author {
+                username
+              }
+              publication {
+                domain
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        postId,
+        input: { ...input, isPartOfPublication: { publicationId: publication._id } },
+      },
+    });
+
+    if (data.errors?.length) {
+      throw new Error(data.errors[0].message);
+    }
+
+    const {
+      data: {
+        updateStory: { post },
       },
     } = data;
 

@@ -36,10 +36,3 @@ export interface PublishBlogResponse {
   id: string;
   url: string;
 }
-
-export type DatabasePublishBlogFields =
-  | "hashNodeBlogUrl"
-  | "devToBlogUrl"
-  | "mediumBlogUrl"
-  | "hashNodeArticleId"
-  | "devToArticleId";

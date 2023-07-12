@@ -23,3 +23,5 @@ export interface HashNodeArticleInput {
   tags: Omit<HashNodeTag, "slug" | "name">[];
   isRepublished?: { originalArticleURL: string };
 }
+
+export type RepublishHashNodeArticleInput = Omit<HashNodeArticleInput, "isRepublished">;

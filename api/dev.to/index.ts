@@ -1,6 +1,6 @@
 import { BlogUser, PublishBlogResponse } from "@/types";
 import Axios, { AxiosInstance } from "axios";
-import { DevToArticleInput, DevToUser } from "./types";
+import { DevToArticleInput, DevToRepublishArticle, DevToUser } from "./types";
 
 export class DevToApiClient {
   private _apiKey: string;
@@ -25,6 +25,14 @@ export class DevToApiClient {
     const { data } = await this.axios.post<Response>("/articles", {
       article,
     });
+    return { url: data.url, id: data.id.toString() };
+  }
+
+  public async republish(id: string, article: DevToRepublishArticle): Promise<PublishBlogResponse> {
+    const { data } = await this.axios.put(`/articles/${id}`, {
+      article,
+    });
+    // Change this
     return { url: data.url, id: data.id.toString() };
   }
 

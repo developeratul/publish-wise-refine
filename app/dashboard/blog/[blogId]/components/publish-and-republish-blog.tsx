@@ -9,7 +9,8 @@ import Icon from "@/components/Icon";
 import { FullPageRelativeLoader } from "@/components/Loader";
 import { generateSlug, htmlToMarkdown } from "@/helpers/blog";
 import { supabaseClient } from "@/lib/supabase";
-import { BlogProviders, DatabasePublishBlogFields, PublishBlogResponse } from "@/types";
+import { parseJson } from "@/lib/utils";
+import { BlogProviders, PublishBlogResponse } from "@/types";
 import {
   Button,
   Drawer,
@@ -33,7 +34,17 @@ import React, { forwardRef } from "react";
 import { toast } from "react-hot-toast";
 import { useBlogContext } from "../BlogProvider";
 
-export interface PublishBlogForm {
+type DatabasePublishBlogFields =
+  | "hashNodeBlogUrl"
+  | "devToBlogUrl"
+  | "mediumBlogUrl"
+  | "hashNodeArticleId"
+  | "devToArticleId"
+  | "mediumArticleId";
+
+type DatabaseBlogUpdates = Partial<Record<DatabasePublishBlogFields, string>>;
+
+export interface PubRepBlogForm {
   selectedBlogs: BlogProviders[];
   primaryBlog?: BlogProviders;
   hashNode: {
@@ -46,54 +57,72 @@ export interface PublishBlogForm {
   };
 }
 
-type DatabaseBlogUpdates = Partial<Record<DatabasePublishBlogFields, string>>;
-
 interface InitialValue {
-  form: UseFormReturnType<PublishBlogForm>;
+  form: UseFormReturnType<PubRepBlogForm>;
+  type: "publish" | "republish";
+  initialValues: PubRepBlogForm;
+  title: string;
+  actionButtonText: string;
+  actionButtonIcon: React.ReactNode;
 }
 
-const PublishBlogContext = React.createContext<InitialValue | undefined>(undefined);
+const PubRepBlogContext = React.createContext<InitialValue | undefined>(undefined);
 
-function usePublishBlog() {
-  const publishBlog = React.useContext(PublishBlogContext);
+function usePubRepBlog() {
+  const pubRepBlog = React.useContext(PubRepBlogContext);
 
-  if (publishBlog === undefined) {
+  if (pubRepBlog === undefined) {
     throw new Error("This hook must be used within specified context");
   }
 
-  return publishBlog;
+  return pubRepBlog;
 }
 
-export default function PublishBlog() {
+export default function PubRepBlog() {
   const [opened, { open, close }] = useDisclosure(false);
-  const { form: blogEditingForm, blog } = useBlogContext();
-  const form = useForm<PublishBlogForm>({
-    initialValues: {
-      selectedBlogs: [],
-      hashNode: { slug: generateSlug(blog.title), tags: [] },
-      devTo: { tags: [] },
-    },
+  const { blog } = useBlogContext();
+
+  const type: InitialValue["type"] = blog.status === "PUBLISHED" ? "republish" : "publish";
+  const initialValues = JSON.parse((blog.publishingDetails as string) || "{}") as PubRepBlogForm;
+  const title = type === "publish" ? "Publish Blog" : "Republish Blog";
+  const actionButtonText = type === "publish" ? "Publish" : "Republish";
+  const actionButtonIcon =
+    type === "publish" ? <Icon name="IconBookUpload" /> : <Icon name="IconRefresh" />;
+
+  const form = useForm<PubRepBlogForm>({
+    initialValues:
+      type === "publish"
+        ? {
+            selectedBlogs: [],
+            hashNode: { slug: generateSlug(blog.title), tags: [] },
+            devTo: { tags: [] },
+          }
+        : initialValues,
     validate: {
-      selectedBlogs: hasLength({ min: 1 }, "Please select at least select one blog for publishing"),
-      primaryBlog: (value, values) =>
-        value && values.selectedBlogs.includes(value)
-          ? null
-          : "Your primary blog was not selected for publishing",
-      // hashNode: {
-      //   slug: isNotEmpty("Slug is required"),
-      //   tags: hasLength({ min: 1 }, "Please select at least one tag"),
-      // },
-      // devTo: {
-      //   tags: hasLength({ min: 1 }, "Please select at least one tag"),
-      // },
+      // We only need those validations for publishing
+      ...(type === "publish"
+        ? {
+            selectedBlogs: hasLength(
+              { min: 1 },
+              "Please select at least select one blog for publishing"
+            ),
+            primaryBlog: (value, values) =>
+              value && values.selectedBlogs.includes(value)
+                ? null
+                : "Your primary blog was not selected for publishing",
+          }
+        : {}),
     },
   });
+
   return (
     <React.Fragment>
       <Button onClick={open} rightIcon={<Icon name="IconBookUpload" />}>
-        Publish
+        {actionButtonText}
       </Button>
-      <PublishBlogContext.Provider value={{ form }}>
+      <PubRepBlogContext.Provider
+        value={{ form, actionButtonText, initialValues, title, type, actionButtonIcon }}
+      >
         <Drawer
           scrollAreaComponent={ScrollArea.Autosize}
           position="right"
@@ -101,11 +130,11 @@ export default function PublishBlog() {
           opened={opened}
           onClose={close}
           withinPortal
-          title="Publish blog"
+          title={title}
         >
           <DrawerContent close={close} />
         </Drawer>
-      </PublishBlogContext.Provider>
+      </PubRepBlogContext.Provider>
     </React.Fragment>
   );
 }
@@ -146,7 +175,7 @@ function DrawerContent(props: { close: () => void }) {
   const [primaryBlogUrlState, setPrimaryBlogUrlState] = React.useState("");
   const [databaseBlogUpdatesState, setDatabaseBlogUpdateState] =
     React.useState<DatabaseBlogUpdates>({});
-  const { form } = usePublishBlog();
+  const { form, actionButtonIcon, actionButtonText, type } = usePubRepBlog();
   const { apiKeys } = useLocalApiKeys();
   const router = useRouter();
 
@@ -177,49 +206,51 @@ function DrawerContent(props: { close: () => void }) {
     },
   ];
 
-  const handlePublishBlog = async (values: PublishBlogForm) => {
+  const blogContentMarkdown = htmlToMarkdown(blogEditingForm.values.content || "");
+
+  const devToPayload: DevToArticleInput & { apiKey: string } = {
+    title: blogEditingForm.values.title,
+    body_markdown: blogContentMarkdown,
+    tags: form.values.devTo.tags,
+    apiKey: apiKeys.devToAPIKey as string,
+  };
+
+  const hashNodePayload: HashNodeArticleInput & { apiKey: string; username: string } = {
+    title: blogEditingForm.values.title,
+    contentMarkdown: blogContentMarkdown,
+    tags: form.values.hashNode.tags.map((tagId) => ({ _id: tagId })),
+    slug: form.values.hashNode.slug,
+    subtitle: form.values.hashNode.subtitle,
+    apiKey: apiKeys.hashNodeAPIKey as string,
+    username: apiKeys.hashNodeUsername as string,
+  };
+
+  const publishBlogPayloads: Record<BlogProviders, object> = {
+    "dev.to": devToPayload,
+    hashNode: hashNodePayload,
+    medium: {},
+  };
+
+  type dbBlogUrlFieldNames = "devToBlogUrl" | "hashNodeBlogUrl" | "mediumBlogUrl";
+  const dbBlogUrlFieldNamesObject: Record<BlogProviders, dbBlogUrlFieldNames> = {
+    "dev.to": "devToBlogUrl",
+    hashNode: "hashNodeBlogUrl",
+    medium: "mediumBlogUrl",
+  };
+
+  type dbBlogIdIdFieldNames = "devToArticleId" | "hashNodeArticleId" | "mediumArticleId";
+  const dbBlogIdFieldNamesObject: Record<BlogProviders, dbBlogIdIdFieldNames> = {
+    "dev.to": "devToArticleId",
+    hashNode: "hashNodeArticleId",
+    medium: "mediumArticleId",
+  };
+
+  const handlePublishBlog = async (values: PubRepBlogForm) => {
     if (blog.status === "PUBLISHED") {
       return toast.error("Blog already published");
     }
 
-    const { primaryBlog, devTo, hashNode, selectedBlogs } = values;
-
-    const blogContentMarkdown = htmlToMarkdown(blogEditingForm.values.content || "");
-
-    const devToPayload: DevToArticleInput & { apiKey: string } = {
-      title: blog.title,
-      body_markdown: blogContentMarkdown,
-      tags: devTo.tags,
-      apiKey: apiKeys.devToAPIKey as string,
-    };
-
-    const hashNodePayload: HashNodeArticleInput & { apiKey: string; username: string } = {
-      title: blog.title,
-      contentMarkdown: blogContentMarkdown,
-      tags: hashNode.tags.map((tagId) => ({ _id: tagId })),
-      slug: hashNode.slug,
-      subtitle: hashNode.subtitle,
-      apiKey: apiKeys.hashNodeAPIKey as string,
-      username: apiKeys.hashNodeUsername as string,
-    };
-
-    const publishBlogPayloads: Record<BlogProviders, object> = {
-      "dev.to": devToPayload,
-      hashNode: hashNodePayload,
-      medium: {},
-    };
-
-    const databaseUrlFieldNames: Record<BlogProviders, string> = {
-      "dev.to": "devToBlogUrl",
-      hashNode: "hashNodeBlogUrl",
-      medium: "mediumBlogUrl",
-    };
-
-    const databaseIdFieldNames: Record<BlogProviders, string> = {
-      "dev.to": "devToArticleId",
-      hashNode: "hashNodeArticleId",
-      medium: "",
-    };
+    const { primaryBlog, selectedBlogs } = values;
 
     try {
       setProcessing(true);
@@ -247,10 +278,10 @@ function DrawerContent(props: { close: () => void }) {
 
         // Update the database primary blog id and url
         databaseBlogUpdates[
-          databaseIdFieldNames[primaryBlog as BlogProviders] as DatabasePublishBlogFields
+          dbBlogIdFieldNamesObject[primaryBlog as BlogProviders] as DatabasePublishBlogFields
         ] = id as string;
         databaseBlogUpdates[
-          databaseUrlFieldNames[primaryBlog as BlogProviders] as DatabasePublishBlogFields
+          dbBlogUrlFieldNamesObject[primaryBlog as BlogProviders] as DatabasePublishBlogFields
         ] = url as string;
 
         primaryBlogUrl = url;
@@ -273,8 +304,8 @@ function DrawerContent(props: { close: () => void }) {
         for (const blogProvider of remainingBlogs) {
           const payload = publishBlogPayloads[blogProvider];
           const canonical = canonicals[blogProvider];
-          const databaseUrlFieldName = databaseUrlFieldNames[blogProvider];
-          const databaseIdFieldName = databaseIdFieldNames[blogProvider];
+          const databaseUrlFieldName = dbBlogUrlFieldNamesObject[blogProvider];
+          const databaseIdFieldName = dbBlogIdFieldNamesObject[blogProvider];
 
           // If the blog is already uploaded, we don't want to upload it again
           if (blogUploadedPlatforms.includes(blogProvider)) {
@@ -316,7 +347,6 @@ function DrawerContent(props: { close: () => void }) {
         .eq("id", blog.id);
 
       close();
-      form.reset();
       router.refresh();
       toast.success("Blog publishing successful");
     } catch (err) {
@@ -326,45 +356,99 @@ function DrawerContent(props: { close: () => void }) {
     }
   };
 
+  const handleRepublishBlog = async () => {
+    try {
+      setProcessing(true);
+
+      const databaseBlogUpdates: DatabaseBlogUpdates = databaseBlogUpdatesState;
+
+      for (const blogProvider of form.values.selectedBlogs) {
+        const payload = publishBlogPayloads[blogProvider];
+        const databaseBlogIdFieldName = dbBlogIdFieldNamesObject[blogProvider];
+        const publishedBlogId = blog[databaseBlogIdFieldName];
+
+        const {
+          data: { id, url },
+        } = await toast.promise(
+          axios.post<PublishBlogResponse>(`/api/${blogProvider}/republish`, {
+            ...payload,
+            publishedBlogId,
+          }),
+          {
+            loading: `Republishing to ${blogProvider}`,
+            error: (err) => err.response?.data?.message,
+            success: `Successfully republished to ${blogProvider}`,
+          }
+        );
+
+        databaseBlogUpdates[
+          dbBlogIdFieldNamesObject[blogProvider as BlogProviders] as DatabasePublishBlogFields
+        ] = id;
+        databaseBlogUpdates[
+          dbBlogUrlFieldNamesObject[blogProvider as BlogProviders] as DatabasePublishBlogFields
+        ] = url;
+      }
+
+      await supabaseClient
+        .from("blogs")
+        .update({
+          publishingDetails: JSON.stringify(form.values),
+          status: "PUBLISHED",
+          last_published_at: new Date().toLocaleDateString(),
+          ...databaseBlogUpdates,
+        })
+        .eq("id", blog.id);
+
+      close();
+      router.refresh();
+      toast.success("Blog republishing successful");
+    } catch (err) {
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handlePubRepBlog = type === "publish" ? handlePublishBlog : handleRepublishBlog;
+
   return (
     <Stack spacing={50}>
-      <form
-        className="flex flex-col gap-4 items-end"
-        id="publish-form"
-        onSubmit={form.onSubmit(handlePublishBlog)}
-      >
-        <MultiSelect
-          required
-          w="100%"
-          {...form.getInputProps("selectedBlogs")}
-          label="Select blogs"
-          placeholder="Select"
-          description="You can only select the blogs that are connected to your PublishWise account"
-          itemComponent={SelectItem}
-          withinPortal
-          data={selectData}
-        />
-        <Select
-          required
-          w="100%"
-          {...form.getInputProps("primaryBlog")}
-          disabled={!form.values.selectedBlogs.length}
-          data={selectData}
-          label="Primary blog"
-          placeholder="Select"
-          withinPortal
-          itemComponent={SelectItem}
-          description="This is where your blog will be uploaded at first"
-        />
+      <form className="flex flex-col gap-8" onSubmit={form.onSubmit(handlePubRepBlog)}>
+        {type === "publish" && (
+          <React.Fragment>
+            <MultiSelect
+              required
+              w="100%"
+              {...form.getInputProps("selectedBlogs")}
+              label="Select blogs"
+              placeholder="Select"
+              description="You can only select the blogs that are connected to your PublishWise account"
+              itemComponent={SelectItem}
+              withinPortal
+              data={selectData}
+            />
+            <Select
+              required
+              w="100%"
+              {...form.getInputProps("primaryBlog")}
+              disabled={!form.values.selectedBlogs.length}
+              data={selectData}
+              label="Primary blog"
+              placeholder="Select"
+              withinPortal
+              itemComponent={SelectItem}
+              description="This is where your blog will be uploaded at first"
+            />
+          </React.Fragment>
+        )}
         <HashNodeDetails />
         <DevToDetails />
         <Button
+          className="self-end"
           loading={isProcessing}
-          rightIcon={<Icon name="IconBookUpload" />}
-          form="publish-form"
+          rightIcon={actionButtonIcon}
           type="submit"
         >
-          Publish
+          {actionButtonText}
         </Button>
       </form>
     </Stack>
@@ -377,8 +461,14 @@ function HashNodeDetails() {
       getInputProps,
       values: { selectedBlogs },
     },
-  } = usePublishBlog();
-  const isHashNodeSelected = selectedBlogs.includes("hashNode");
+    type,
+  } = usePubRepBlog();
+  const { blog } = useBlogContext();
+
+  const isBlogSelected =
+    type === "publish"
+      ? selectedBlogs.includes("hashNode")
+      : parseJson<PubRepBlogForm>(blog.publishingDetails).selectedBlogs.includes("hashNode");
 
   const { apiKeys } = useLocalApiKeys();
 
@@ -392,10 +482,10 @@ function HashNodeDetails() {
       });
       return { tags };
     },
-    enabled: isHashNodeSelected,
+    enabled: isBlogSelected,
   });
 
-  if (!isHashNodeSelected) return <></>;
+  if (!isBlogSelected) return <></>;
 
   return (
     <Stack w="100%">
@@ -426,8 +516,14 @@ function DevToDetails() {
       getInputProps,
       values: { selectedBlogs },
     },
-  } = usePublishBlog();
-  const isBlogSelected = selectedBlogs.includes("dev.to");
+    type,
+  } = usePubRepBlog();
+  const { blog } = useBlogContext();
+
+  const isBlogSelected =
+    type === "publish"
+      ? selectedBlogs.includes("dev.to")
+      : parseJson<PubRepBlogForm>(blog.publishingDetails).selectedBlogs.includes("dev.to");
 
   if (!isBlogSelected) return <></>;
 
