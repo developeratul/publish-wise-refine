@@ -5,7 +5,7 @@ import DropzoneModal from "@/components/DropzoneModal";
 import Icon from "@/components/Icon";
 import { getFileExtension } from "@/helpers/file";
 import { Select } from "@mantine/core";
-import { FileRejection, FileWithPath } from "@mantine/dropzone";
+import { FileWithPath } from "@mantine/dropzone";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import { useMutation } from "@tanstack/react-query";
 import CodeBlockLowlight, { CodeBlockLowlightOptions } from "@tiptap/extension-code-block-lowlight";
@@ -160,13 +160,8 @@ export function InsertImage(props: { editor: Editor }) {
     }
   };
 
-  const handleReject = (rejections: FileRejection[]) => {
-    const rejection = rejections[0];
-    toast.error(rejection.errors[0].message);
-  };
-
   return (
-    <DropzoneModal onReject={handleReject} loading={isLoading} onDrop={handleDrop}>
+    <DropzoneModal loading={isLoading} onDrop={handleDrop}>
       <RichTextEditor.Control aria-label="Insert image" title="Insert image">
         <Icon name="IconPhoto" size={16} />
       </RichTextEditor.Control>

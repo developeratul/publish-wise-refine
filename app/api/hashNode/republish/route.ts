@@ -6,14 +6,10 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const {
-      title,
-      contentMarkdown,
-      tags,
-      subtitle,
-      slug,
       apiKey,
       username,
       publishedBlogId,
+      ...articleInput
     }: RepublishHashNodeArticleInput & {
       apiKey: string;
       username: string;
@@ -23,11 +19,7 @@ export async function POST(req: Request) {
     const client = new HashNodeApiClient(apiKey);
 
     const { id, url } = await client.republish(publishedBlogId, username, {
-      title,
-      contentMarkdown,
-      slug,
-      tags,
-      subtitle,
+      ...articleInput,
     });
 
     return NextResponse.json({ id, url });

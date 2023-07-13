@@ -6,19 +6,15 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const {
-      title,
-      body_markdown,
-      tags,
       apiKey,
       publishedBlogId,
+      ...articleInput
     }: DevToRepublishArticle & { apiKey: string; publishedBlogId: string } = await req.json();
 
     const client = new DevToApiClient(apiKey);
 
     const { id, url } = await client.republish(publishedBlogId, {
-      title,
-      body_markdown,
-      tags,
+      ...articleInput,
       published: true,
     });
 

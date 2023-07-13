@@ -1,21 +1,26 @@
 "use client";
 import { DevToArticleInput } from "@/api/dev.to/types";
 import { HashNodeArticleInput, HashNodeTag } from "@/api/hashnode/types";
+import { useUserContext } from "@/app/dashboard/providers/user";
 import { useGetIntegratedBlogsQuery, useLocalApiKeys } from "@/app/dashboard/settings/Integrations";
 import DevToLogoSrc from "@/assets/logos/dev-to.png";
 import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
 import MediumLogoSrc from "@/assets/logos/medium.png";
+import { CustomDropzone } from "@/components/DropzoneModal";
 import Icon from "@/components/Icon";
 import { FullPageRelativeLoader } from "@/components/Loader";
 import { generateSlug, htmlToMarkdown } from "@/helpers/blog";
+import { useDeleteFile, useUploadFile } from "@/hooks/file";
 import { supabaseClient } from "@/lib/supabase";
 import { parseJson } from "@/lib/utils";
 import { BlogProviders, PublishBlogResponse } from "@/types";
 import {
+  ActionIcon,
   Button,
   Drawer,
   Group,
   Loader,
+  Image as MantineImage,
   MultiSelect,
   ScrollArea,
   Select,
@@ -23,7 +28,9 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core";
+import { FileWithPath } from "@mantine/dropzone";
 import { UseFormReturnType, hasLength, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
@@ -51,9 +58,11 @@ export interface PubRepBlogForm {
     slug: string;
     subtitle?: string;
     tags: string[];
+    coverImagePath?: string;
   };
   devTo: {
     tags: string[];
+    coverImagePath?: string;
   };
 }
 
@@ -208,16 +217,27 @@ function DrawerContent(props: { close: () => void }) {
 
   const blogContentMarkdown = htmlToMarkdown(blogEditingForm.values.content || "");
 
+  const devToCoverImageUrl = form.values.devTo.coverImagePath
+    ? supabaseClient.storage.from("blog-covers").getPublicUrl(form.values.devTo.coverImagePath).data
+        .publicUrl
+    : undefined;
+  const hashNodeCoverImageUrl = form.values.hashNode.coverImagePath
+    ? supabaseClient.storage.from("blog-covers").getPublicUrl(form.values.hashNode.coverImagePath)
+        .data.publicUrl
+    : undefined;
+
   const devToPayload: DevToArticleInput & { apiKey: string } = {
     title: blogEditingForm.values.title,
     body_markdown: blogContentMarkdown,
     tags: form.values.devTo.tags,
     apiKey: apiKeys.devToAPIKey as string,
+    main_image: devToCoverImageUrl || null,
   };
 
   const hashNodePayload: HashNodeArticleInput & { apiKey: string; username: string } = {
     title: blogEditingForm.values.title,
     contentMarkdown: blogContentMarkdown,
+    coverImageURL: hashNodeCoverImageUrl || null,
     tags: form.values.hashNode.tags.map((tagId) => ({ _id: tagId })),
     slug: form.values.hashNode.slug,
     subtitle: form.values.hashNode.subtitle,
@@ -341,7 +361,9 @@ function DrawerContent(props: { close: () => void }) {
         .update({
           publishingDetails: JSON.stringify(values),
           status: "PUBLISHED",
-          last_published_at: new Date().toLocaleDateString(),
+          last_published_at: Date(),
+          devToArticleCoverImagePath: values.devTo.coverImagePath,
+          hashNodeArticleCoverImagePath: values.hashNode.coverImagePath,
           ...databaseBlogUpdates,
         })
         .eq("id", blog.id);
@@ -412,9 +434,9 @@ function DrawerContent(props: { close: () => void }) {
 
   return (
     <Stack spacing={50}>
-      <form className="flex flex-col gap-8" onSubmit={form.onSubmit(handlePubRepBlog)}>
+      <form className="flex flex-col gap-12" onSubmit={form.onSubmit(handlePubRepBlog)}>
         {type === "publish" && (
-          <React.Fragment>
+          <Stack>
             <MultiSelect
               required
               w="100%"
@@ -438,7 +460,7 @@ function DrawerContent(props: { close: () => void }) {
               itemComponent={SelectItem}
               description="This is where your blog will be uploaded at first"
             />
-          </React.Fragment>
+          </Stack>
         )}
         <HashNodeDetails />
         <DevToDetails />
@@ -455,11 +477,92 @@ function DrawerContent(props: { close: () => void }) {
   );
 }
 
+function BlogCoverImage(props: {
+  coverImagePath: string | null;
+  provider: BlogProviders;
+  field: string;
+}) {
+  const { coverImagePath, provider, field } = props;
+  const user = useUserContext();
+  const { blog } = useBlogContext();
+  const { form } = usePubRepBlog();
+
+  const { mutateAsync: uploadFile, isLoading: isFileUploading } = useUploadFile({
+    mutationKey: [`upload-${provider}-cover-image`],
+    folderName: `${user.id}/${blog.id}`,
+    bucketName: "blog-covers",
+  });
+
+  const { mutateAsync: deleteFile, isLoading: isFileDeleting } = useDeleteFile({
+    mutationKey: [`delete-${provider}-cover-image`],
+    bucketName: "blog-covers",
+  });
+
+  const handleDeleteImage = async () => {
+    if (!coverImagePath) return;
+    const confirmed = window.confirm(
+      "Are you sure, you want to delete this permanently? This action cannot be undone!"
+    );
+    if (!confirmed) return;
+    try {
+      await deleteFile({ filePaths: [coverImagePath] });
+      form.setFieldValue(field, null);
+    } catch (err) {
+      //
+    }
+  };
+
+  if (!coverImagePath) {
+    const handleDrop = async (files: FileWithPath[]) => {
+      try {
+        const file = files[0];
+        const { filePath } = await uploadFile({ file });
+        form.setFieldValue(field, filePath);
+      } catch (err) {
+        //
+      }
+    };
+
+    return (
+      <CustomDropzone
+        loading={isFileUploading}
+        dropzoneTitle="Drop your cover image here or click to select"
+        dropzoneDescription="Use a ratio of 160:84 for best results (1600x840)"
+        onDrop={handleDrop}
+      />
+    );
+  }
+
+  return (
+    <div className="relative">
+      <MantineImage
+        src={supabaseClient.storage.from("blog-covers").getPublicUrl(coverImagePath).data.publicUrl}
+        radius="md"
+        withPlaceholder
+        mih={100}
+        alt={coverImagePath}
+      />
+      <Tooltip position="left" withArrow label="Remove cover image">
+        <ActionIcon
+          loading={isFileDeleting}
+          onClick={handleDeleteImage}
+          variant="filled"
+          size="lg"
+          color="red"
+          className="absolute top-0 right-0 m-4"
+        >
+          <Icon name="IconTrash" />
+        </ActionIcon>
+      </Tooltip>
+    </div>
+  );
+}
+
 function HashNodeDetails() {
   const {
     form: {
       getInputProps,
-      values: { selectedBlogs },
+      values: { selectedBlogs, hashNode },
     },
     type,
   } = usePubRepBlog();
@@ -491,6 +594,11 @@ function HashNodeDetails() {
     <Stack w="100%">
       <Title order={4}>HashNode details</Title>
       <Stack spacing="xs">
+        <BlogCoverImage
+          coverImagePath={hashNode.coverImagePath || null}
+          field="hashNode.coverImagePath"
+          provider="hashNode"
+        />
         <TextInput
           icon={<Icon name="IconSlash" />}
           label="Slug"
@@ -514,7 +622,7 @@ function DevToDetails() {
   const {
     form: {
       getInputProps,
-      values: { selectedBlogs },
+      values: { selectedBlogs, devTo },
     },
     type,
   } = usePubRepBlog();
@@ -531,6 +639,11 @@ function DevToDetails() {
     <Stack w="100%">
       <Title order={4}>Dev.to details</Title>
       <Stack spacing="xs">
+        <BlogCoverImage
+          coverImagePath={devTo.coverImagePath || null}
+          field="devTo.coverImagePath"
+          provider="dev.to"
+        />
         <MultiSelect
           {...getInputProps("devTo.tags")}
           label="Tags"

@@ -4,7 +4,7 @@ export interface DevToArticleInput {
   body_markdown: string;
   published?: boolean;
   series?: string;
-  main_image?: string;
+  main_image: string | null;
   canonical_url?: string;
   tags?: string[];
 }

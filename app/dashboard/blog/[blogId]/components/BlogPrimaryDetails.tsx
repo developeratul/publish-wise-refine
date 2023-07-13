@@ -4,6 +4,7 @@ import DevToLogoSrc from "@/assets/logos/dev-to.png";
 import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
 import Icon from "@/components/Icon";
 import useMediaQuery from "@/hooks/useMediaQuery";
+import { formatDate } from "@/lib/utils";
 import {
   Badge,
   CloseButton,
@@ -16,6 +17,7 @@ import {
   Textarea,
 } from "@mantine/core";
 import Image from "next/image";
+import React from "react";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogPrimaryDetails() {
@@ -64,26 +66,39 @@ export default function BlogPrimaryDetails() {
           <BlogTags />
         </Flex>
         {blog.status === "PUBLISHED" && (
-          <Flex align="center">
-            <Group noWrap className="w-full max-w-[250px]" align="center">
-              <Icon size={22} name="IconBookUpload" />
-              <Text size="md" className="font-medium">
-                Published on
-              </Text>
-            </Group>
-            <div className="flex w-full gap-2">
-              {blog.devToBlogUrl && (
-                <a href={blog.devToBlogUrl} target="_blank" rel="noopener noreferrer">
-                  <Image width={25} src={DevToLogoSrc} alt="Dev.to logo" />
-                </a>
-              )}
-              {blog.hashNodeBlogUrl && (
-                <a href={blog.hashNodeBlogUrl} target="_blank" rel="noopener noreferrer">
-                  <Image width={25} src={HashNodeLogoSrc} alt="HashNode logo" />
-                </a>
-              )}
-            </div>
-          </Flex>
+          <React.Fragment>
+            <Flex align="center">
+              <Group noWrap className="w-full max-w-[250px]" align="center">
+                <Icon size={22} name="IconBookUpload" />
+                <Text size="md" className="font-medium">
+                  Published on
+                </Text>
+              </Group>
+              <div className="flex w-full gap-2">
+                {blog.devToBlogUrl && (
+                  <a href={blog.devToBlogUrl} target="_blank" rel="noopener noreferrer">
+                    <Image width={25} src={DevToLogoSrc} alt="Dev.to logo" />
+                  </a>
+                )}
+                {blog.hashNodeBlogUrl && (
+                  <a href={blog.hashNodeBlogUrl} target="_blank" rel="noopener noreferrer">
+                    <Image width={25} src={HashNodeLogoSrc} alt="HashNode logo" />
+                  </a>
+                )}
+              </div>
+            </Flex>
+            <Flex align="center">
+              <Group noWrap className="w-full max-w-[250px]" align="center">
+                <Icon size={22} name="IconCalendarEvent" />
+                <Text size="md" className="font-medium">
+                  Last published
+                </Text>
+              </Group>
+              <div className="flex-1 w-full gap-2">
+                {formatDate(blog.last_published_at as string)}
+              </div>
+            </Flex>
+          </React.Fragment>
         )}
       </Stack>
     </Stack>
@@ -97,7 +112,7 @@ function BlogTags() {
   return (
     <MultiSelect
       styles={{
-        input: { border: "none", background: "transparent" },
+        input: { border: "none", background: "transparent", paddingTop: 0, paddingBottom: 0 },
         values: { gap: 8 },
       }}
       readOnly={!isEditingMode}
@@ -106,7 +121,6 @@ function BlogTags() {
       creatable
       w="100%"
       rightSection={<></>}
-      size="md"
       data={tagsFormatted}
       value={tags}
       onChange={(tags) => form.setFieldValue("tags", tags)}

@@ -18,6 +18,7 @@ export interface HashnodeUser {
 export interface HashNodeArticleInput {
   title: string;
   contentMarkdown: string;
+  coverImageURL: string | null;
   subtitle?: string;
   slug: string;
   tags: Omit<HashNodeTag, "slug" | "name">[];

@@ -1,7 +1,8 @@
 import { Group, Modal, Text, rem, useMantineTheme } from "@mantine/core";
-import { Dropzone, DropzoneProps, IMAGE_MIME_TYPE } from "@mantine/dropzone";
+import { Dropzone, DropzoneProps, FileRejection, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useDisclosure } from "@mantine/hooks";
 import React from "react";
+import { toast } from "react-hot-toast";
 import Icon from "./Icon";
 
 interface CustomDropzoneProps extends Partial<DropzoneProps> {
@@ -20,10 +21,16 @@ export function CustomDropzone(props: CustomDropzoneProps) {
     accept = IMAGE_MIME_TYPE,
   } = props;
   const theme = useMantineTheme();
+
+  const handleReject = (rejections: FileRejection[]) => {
+    const rejection = rejections[0];
+    toast.error(rejection.errors[0].message);
+  };
+
   return (
     <Dropzone
       onDrop={onDrop}
-      onReject={onReject}
+      onReject={onReject || handleReject}
       maxSize={maxSize}
       accept={accept}
       maxFiles={maxFiles}

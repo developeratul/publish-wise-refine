@@ -5,21 +5,12 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const {
-      title,
-      body_markdown,
-      canonical_url,
-      tags,
-      apiKey,
-    }: DevToArticleInput & { apiKey: string } = await req.json();
+    const { apiKey, ...articleInputs }: DevToArticleInput & { apiKey: string } = await req.json();
 
     const client = new DevToApiClient(apiKey);
 
     const { id, url } = await client.publish({
-      title,
-      body_markdown,
-      canonical_url,
-      tags,
+      ...articleInputs,
       published: true,
     });
 
