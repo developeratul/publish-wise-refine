@@ -2,6 +2,7 @@
 import { Conditional } from "@/components/Conditional";
 import Icon from "@/components/Icon";
 import EmptyMessage from "@/components/Messages";
+import { getFileUrl } from "@/helpers/file";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { formatDate } from "@/lib/utils";
 import { AppProps, Blog, BlogStatus } from "@/types";
@@ -75,21 +76,34 @@ export const badgeStyles: Record<BlogStatus, { color: DefaultMantineColor; label
 };
 
 function BlogItem(props: Blog) {
-  const { status, title, created_at, id } = props;
+  const {
+    status,
+    title,
+    created_at,
+    id,
+    devToArticleCoverImagePath,
+    hashNodeArticleCoverImagePath,
+  } = props;
   const badgeStyle = badgeStyles[status];
+  const coverImageUrl = getFileUrl(
+    "blog-covers",
+    devToArticleCoverImagePath || hashNodeArticleCoverImagePath || ""
+  );
   return (
     <Card withBorder>
       <Card.Section mb="md">
         <Image
-          src="https://picsum.photos/seed/picsum/300/160"
-          height={160}
+          style={{ aspectRatio: "100/42" }}
+          height={150}
+          src={coverImageUrl}
+          withPlaceholder
           fit="cover"
           alt="Norway"
         />
       </Card.Section>
       <Stack>
         <Stack spacing="xs">
-          <Text lineClamp={2} color="white">
+          <Text lineClamp={1} color="white">
             {title}
           </Text>
           <Text size="xs" color="dimmed">
