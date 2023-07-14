@@ -21,9 +21,19 @@ import React from "react";
 import { useBlogContext } from "../BlogProvider";
 
 export default function BlogPrimaryDetails() {
+  const [hydrated, setHydrated] = React.useState(false);
   const { form, isEditingMode, blog } = useBlogContext();
   const { isOverSm } = useMediaQuery();
   const badgeStyle = badgeStyles[blog.status];
+
+  React.useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) {
+    return <></>;
+  }
+
   return (
     <Stack mb={50}>
       <Stack spacing="xs">

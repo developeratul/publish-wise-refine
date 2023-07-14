@@ -9,14 +9,15 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(input: string | number): string {
   const date = new Date(input);
-  return date.toLocaleDateString("en-US", {
+  const formattedDate = date.toLocaleDateString("en-US", {
+    year: "numeric",
     month: "long",
     day: "numeric",
-    year: "numeric",
-    hour12: true,
     hour: "numeric",
     minute: "numeric",
+    hour12: true,
   });
+  return formattedDate.toString();
 }
 
 export function absoluteUrl(path: string) {

@@ -20,6 +20,7 @@ import {
   Title,
 } from "@mantine/core";
 import Link from "next/link";
+import React from "react";
 import { useDashboardContext } from "../providers/dashboard";
 import { useDeleteBlogContext } from "../providers/delete-blog";
 import { CreateNewBlogButton } from "./Header";
@@ -76,19 +77,23 @@ export const badgeStyles: Record<BlogStatus, { color: DefaultMantineColor; label
 };
 
 function BlogItem(props: Blog) {
-  const {
-    status,
-    title,
-    created_at,
-    id,
-    devToArticleCoverImagePath,
-    hashNodeArticleCoverImagePath,
-  } = props;
-  const badgeStyle = badgeStyles[status];
+  const blog = props;
+  const [hydrated, setHydrated] = React.useState(false);
+
+  const badgeStyle = badgeStyles[blog.status];
   const coverImageUrl = getFileUrl(
     "blog-covers",
-    devToArticleCoverImagePath || hashNodeArticleCoverImagePath || ""
+    blog.devToArticleCoverImagePath || blog.hashNodeArticleCoverImagePath || ""
   );
+
+  React.useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) {
+    return <></>;
+  }
+
   return (
     <Card withBorder>
       <Card.Section mb="md">
@@ -104,15 +109,15 @@ function BlogItem(props: Blog) {
       <Stack>
         <Stack spacing="xs">
           <Text lineClamp={1} color="white">
-            {title}
+            {blog.title}
           </Text>
           <Text size="xs" color="dimmed">
-            {formatDate(created_at)}
+            {formatDate(blog.created_at)}
           </Text>
         </Stack>
         <Group position="apart">
           <Badge color={badgeStyle.color || undefined}>{badgeStyle.label}</Badge>
-          <BlogItemMenu blogId={id}>
+          <BlogItemMenu blogId={blog.id}>
             <ActionIcon size="md" variant="light">
               <Icon name="IconDotsVertical" />
             </ActionIcon>
