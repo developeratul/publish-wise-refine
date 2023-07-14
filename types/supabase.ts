@@ -13,7 +13,7 @@ export interface Database {
         Row: {
           content: string | null
           created_at: string
-          devToArticleCoverImageUrl: string | null
+          devToArticleCoverImagePath: string | null
           devToArticleId: string | null
           devToBlogUrl: string | null
           hashNodeArticleCoverImagePath: string | null
@@ -32,7 +32,7 @@ export interface Database {
         Insert: {
           content?: string | null
           created_at?: string
-          devToArticleCoverImageUrl?: string | null
+          devToArticleCoverImagePath?: string | null
           devToArticleId?: string | null
           devToBlogUrl?: string | null
           hashNodeArticleCoverImagePath?: string | null
@@ -51,7 +51,7 @@ export interface Database {
         Update: {
           content?: string | null
           created_at?: string
-          devToArticleCoverImageUrl?: string | null
+          devToArticleCoverImagePath?: string | null
           devToArticleId?: string | null
           devToBlogUrl?: string | null
           hashNodeArticleCoverImagePath?: string | null

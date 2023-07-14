@@ -1,5 +1,7 @@
 "use client";
+import { Conditional } from "@/components/Conditional";
 import Icon from "@/components/Icon";
+import EmptyMessage from "@/components/Messages";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { formatDate } from "@/lib/utils";
 import { AppProps, Blog, BlogStatus } from "@/types";
@@ -19,6 +21,7 @@ import {
 import Link from "next/link";
 import { useDashboardContext } from "../providers/dashboard";
 import { useDeleteBlogContext } from "../providers/delete-blog";
+import { CreateNewBlogButton } from "./Header";
 
 export default function DashboardBlogsSection() {
   const { blogs } = useDashboardContext();
@@ -35,11 +38,23 @@ export default function DashboardBlogsSection() {
        * over Sm 3
        * over xl 4
        */}
-      <SimpleGrid cols={isOverXs ? (isOverSm ? (isOverXl ? 4 : 3) : 2) : 1}>
-        {blogs.map((blog) => (
-          <BlogItem {...blog} key={blog.id} />
-        ))}
-      </SimpleGrid>
+      <Conditional
+        condition={blogs.length > 0}
+        fallback={
+          <EmptyMessage
+            title="Nothing to show"
+            description="You currently have no blogs created"
+            action={<CreateNewBlogButton />}
+          />
+        }
+        component={
+          <SimpleGrid cols={isOverXs ? (isOverSm ? (isOverXl ? 4 : 3) : 2) : 1}>
+            {blogs.map((blog) => (
+              <BlogItem {...blog} key={blog.id} />
+            ))}
+          </SimpleGrid>
+        }
+      />
     </Stack>
   );
 }

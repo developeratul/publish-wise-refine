@@ -5,10 +5,24 @@ import { Button, Group, Stack, Title } from "@mantine/core";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { useDashboardContext } from "../providers/dashboard";
+import { useUserContext } from "../providers/user";
 
 export default function DashboardHeader() {
-  const { user } = useDashboardContext();
+  const user = useUserContext();
+
+  return (
+    <Group spacing="xs" position="apart" align="center">
+      <Stack>
+        <Title order={2}>Welcome back, {user.user_metadata.first_name}</Title>
+      </Stack>
+      <CreateNewBlogButton />
+    </Group>
+  );
+}
+
+export function CreateNewBlogButton() {
+  const user = useUserContext();
+
   const { mutateAsync, isLoading } = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabaseClient
@@ -37,19 +51,9 @@ export default function DashboardHeader() {
       //
     }
   };
-
   return (
-    <Group spacing="xs" position="apart" align="center">
-      <Stack>
-        <Title order={2}>Welcome back, {user?.user_metadata.first_name}</Title>
-      </Stack>
-      <Button
-        onClick={handleCreateNewDraft}
-        loading={isLoading}
-        leftIcon={<Icon name="IconNotes" />}
-      >
-        New draft
-      </Button>
-    </Group>
+    <Button onClick={handleCreateNewDraft} loading={isLoading} leftIcon={<Icon name="IconNotes" />}>
+      New draft
+    </Button>
   );
 }

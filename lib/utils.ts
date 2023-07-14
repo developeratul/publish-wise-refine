@@ -7,13 +7,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(input: string | number, includeTime: boolean = false): string {
+export function formatDate(input: string | number): string {
   const date = new Date(input);
   return date.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
-    ...(includeTime ? { hour12: true, hour: "numeric", minute: "numeric" } : {}),
+    hour12: true,
+    hour: "numeric",
+    minute: "numeric",
   });
 }
 
