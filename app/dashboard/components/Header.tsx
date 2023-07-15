@@ -1,7 +1,8 @@
 "use client";
 import Icon from "@/components/Icon";
+import useColorModeValue from "@/hooks/useColorModeValue";
 import { supabaseClient } from "@/lib/supabase";
-import { Button, Group, Stack, Title } from "@mantine/core";
+import { Button, Group, Stack, Title, useMantineTheme } from "@mantine/core";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -9,11 +10,14 @@ import { useUserContext } from "../providers/user";
 
 export default function DashboardHeader() {
   const user = useUserContext();
+  const theme = useMantineTheme();
 
   return (
     <Group spacing="xs" position="apart" align="center">
       <Stack>
-        <Title order={2}>Welcome back, {user.user_metadata.first_name}</Title>
+        <Title color={useColorModeValue(theme.black, theme.white)} order={2}>
+          Welcome back, {user.user_metadata.first_name}
+        </Title>
       </Stack>
       <CreateNewBlogButton />
     </Group>

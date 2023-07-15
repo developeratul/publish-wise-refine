@@ -37,9 +37,7 @@ export default function Integrations() {
   return (
     <Stack spacing="xl">
       <Stack spacing="xs">
-        <Title order={2} color="white">
-          Integrations
-        </Title>
+        <Title order={2}>Integrations</Title>
         <Text className="font-medium">Your API keys are stored locally for security concerns</Text>
       </Stack>
       <Stack spacing={50}>
@@ -121,7 +119,7 @@ function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
         <Avatar size="xl" radius="100%" src={user.avatarUrl} />
       </Indicator>
       <Stack spacing="xs">
-        <Title lineClamp={1} order={3} color="white">
+        <Title lineClamp={1} order={3}>
           {user.name}
         </Title>
         <Text lineClamp={1}>@{user.username}</Text>
@@ -243,9 +241,7 @@ function SingleIntegration(props: SingleIntegrationProps) {
       <Stack maw={350} spacing="xs">
         <Group>
           <Image width={50} src={logoSrc} alt={`${name} logo`} />
-          <Title color="white" order={3}>
-            {name}
-          </Title>
+          <Title order={3}>{name}</Title>
         </Group>
         <Text>{description}</Text>
       </Stack>

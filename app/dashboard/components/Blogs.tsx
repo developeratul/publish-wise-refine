@@ -3,6 +3,7 @@ import { Conditional } from "@/components/Conditional";
 import Icon from "@/components/Icon";
 import EmptyMessage from "@/components/Messages";
 import { getFileUrl } from "@/helpers/file";
+import useColorModeValue from "@/hooks/useColorModeValue";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { formatDate } from "@/lib/utils";
 import { AppProps, Blog, BlogStatus } from "@/types";
@@ -18,6 +19,7 @@ import {
   Stack,
   Text,
   Title,
+  useMantineTheme,
 } from "@mantine/core";
 import Link from "next/link";
 import React from "react";
@@ -28,10 +30,14 @@ import { CreateNewBlogButton } from "./Header";
 export default function DashboardBlogsSection() {
   const { blogs } = useDashboardContext();
   const { isOverSm, isOverXl, isOverXs } = useMediaQuery();
+  const theme = useMantineTheme();
+
   return (
     <Stack>
       <Group position="apart">
-        <Title order={2}>Your blogs ({blogs.length})</Title>
+        <Title color={useColorModeValue(theme.black, theme.white)} order={2}>
+          Your blogs ({blogs.length})
+        </Title>
         <Group></Group>
       </Group>
       {/**
@@ -103,14 +109,12 @@ function BlogItem(props: Blog) {
           src={coverImageUrl}
           withPlaceholder
           fit="cover"
-          alt="Norway"
+          alt="Cover image"
         />
       </Card.Section>
       <Stack>
         <Stack spacing="xs">
-          <Text lineClamp={1} color="white">
-            {blog.title}
-          </Text>
+          <Text lineClamp={1}>{blog.title}</Text>
           <Text size="xs" color="dimmed">
             {formatDate(blog.created_at)}
           </Text>

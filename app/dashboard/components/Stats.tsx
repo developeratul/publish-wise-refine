@@ -3,9 +3,15 @@ import Icon from "@/components/Icon";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { AppProps } from "@/types";
 import { Card, Flex, SimpleGrid, Stack, Text, ThemeIcon, Title } from "@mantine/core";
+import { useDashboardContext } from "../providers/dashboard";
 
 export default function DashboardStats() {
   const { isOverSm } = useMediaQuery();
+  const { blogs } = useDashboardContext();
+
+  const draftBlogs = blogs.filter((blog) => blog.status === "DRAFT");
+  const publishedBlogs = blogs.filter((blog) => blog.status === "PUBLISHED");
+
   return (
     <SimpleGrid cols={isOverSm ? 3 : 1}>
       <StatCard>
@@ -15,7 +21,9 @@ export default function DashboardStats() {
           </ThemeIcon>
           <Stack w="100%">
             <Text>Scheduled</Text>
-            <Title order={3}>4</Title>
+            <Title order={4} weight={400} color="orange">
+              Coming soon
+            </Title>
           </Stack>
         </Flex>
       </StatCard>
@@ -26,7 +34,7 @@ export default function DashboardStats() {
           </ThemeIcon>
           <Stack w="100%">
             <Text>Drafts</Text>
-            <Title order={3}>10</Title>
+            <Title order={3}>{draftBlogs.length}</Title>
           </Stack>
         </Flex>
       </StatCard>
@@ -37,7 +45,7 @@ export default function DashboardStats() {
           </ThemeIcon>
           <Stack w="100%">
             <Text>Published</Text>
-            <Title order={3}>20</Title>
+            <Title order={3}>{publishedBlogs.length}</Title>
           </Stack>
         </Flex>
       </StatCard>

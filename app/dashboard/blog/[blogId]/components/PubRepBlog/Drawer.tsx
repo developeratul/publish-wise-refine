@@ -39,9 +39,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, ItemProps>(
       <Group opacity={disabled ? 0.3 : 1} noWrap>
         <Image width={50} height={50} src={image} alt={label} />
         <Stack spacing="xs">
-          <Text size="md" color="white">
-            {label}
-          </Text>
+          <Text size="md">{label}</Text>
           <Text size="xs" color="dimmed">
             {description}
           </Text>

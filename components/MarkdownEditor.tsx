@@ -6,7 +6,7 @@ export default function MarkdownEditor(props: { editor: Editor | null; isEditing
   const { editor, isEditingMode = true } = props;
   if (!editor) return <></>;
   return (
-    <RichTextEditor w="100%" mih="70vh" editor={editor}>
+    <RichTextEditor editor={editor}>
       {isEditingMode && (
         <RichTextEditor.Toolbar sticky stickyOffset={70}>
           <RichTextEditor.ControlsGroup>
@@ -43,7 +43,7 @@ export default function MarkdownEditor(props: { editor: Editor | null; isEditing
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>
       )}
-      <RichTextEditor.Content h="100%" />
+      <RichTextEditor.Content mih="70vh" />
     </RichTextEditor>
   );
 }

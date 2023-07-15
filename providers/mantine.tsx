@@ -8,14 +8,16 @@ import {
   MantineProvider as CoreProvider,
   useEmotionCache,
 } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
+import { useHotkeys, useLocalStorage } from "@mantine/hooks";
 import { useServerInsertedHTML } from "next/navigation";
+import React from "react";
 
 export default function MantineProvider(props: AppProps) {
   const { children } = props;
+  const [hydrated, setHydrated] = React.useState(false);
   const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
     key: "mantine-color-scheme",
-    defaultValue: "light",
+    defaultValue: "dark",
     getInitialValueInEffect: true,
   });
 
@@ -33,11 +35,20 @@ export default function MantineProvider(props: AppProps) {
       }}
     />
   ));
+  const customTheme = { ...theme, colorScheme };
+
+  useHotkeys([["mod+/", () => toggleColorScheme()]]);
+
+  React.useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) return <></>;
 
   return (
     <CacheProvider value={cache}>
       {/* The color scheme is hard coded for now because I don't want to add light mode rn */}
-      <CoreProvider theme={theme} withCSSVariables withGlobalStyles withNormalizeCSS>
+      <CoreProvider theme={customTheme} withCSSVariables withGlobalStyles withNormalizeCSS>
         <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
           {children}
         </ColorSchemeProvider>

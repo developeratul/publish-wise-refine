@@ -1,8 +1,19 @@
 "use client";
+import DefaultUserAvatarSrc from "@/assets/jpg/default-user-avatar.jpg";
 import Icon from "@/components/Icon";
 import Logo from "@/components/Logo";
+import useColorModeValue from "@/hooks/useColorModeValue";
 import { supabaseClient } from "@/lib/supabase";
-import { AppShell, Avatar, Group, Header, Menu, UnstyledButton } from "@mantine/core";
+import {
+  AppShell,
+  Avatar,
+  Group,
+  Header,
+  Menu,
+  Text,
+  UnstyledButton,
+  useMantineColorScheme,
+} from "@mantine/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -14,13 +25,19 @@ export default function DashboardLayoutWrapper(props: UserProviderProps) {
   return (
     <AppShell
       header={
-        <Header bg="dark.6" height={70}>
+        <Header bg={useColorModeValue("gray.0", "dark.8")} height={70}>
           <Group align="center" position="apart" h="100%" px={20}>
             <Logo href="/dashboard" order={3} size={18} />
             <ProfileMenu />
           </Group>
         </Header>
       }
+      styles={(theme) => ({
+        main: {
+          backgroundColor:
+            theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.colors.gray[1],
+        },
+      })}
     >
       <UserProvider user={user}>
         <DeleteBlogProvider>{children}</DeleteBlogProvider>
@@ -31,6 +48,7 @@ export default function DashboardLayoutWrapper(props: UserProviderProps) {
 
 function ProfileMenu() {
   const router = useRouter();
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
   const handleLogout = async () => {
     await toast.promise(supabaseClient.auth.signOut(), {
@@ -45,7 +63,12 @@ function ProfileMenu() {
     <Menu withArrow>
       <Menu.Target>
         <UnstyledButton>
-          <Avatar radius="xl" variant="filled" />
+          <Avatar
+            src={DefaultUserAvatarSrc.src}
+            alt="Default user avatar"
+            radius="xl"
+            variant="filled"
+          />
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
@@ -54,6 +77,18 @@ function ProfileMenu() {
         </Menu.Item>
         <Menu.Item onClick={handleLogout} icon={<Icon name="IconLogout" />}>
           Logout from PublishWise
+        </Menu.Item>
+        <Menu.Divider />
+        <Menu.Item
+          onClick={() => toggleColorScheme()}
+          rightSection={
+            <Text size="xs" pl={16} color="dimmed">
+              ⌘+/
+            </Text>
+          }
+          icon={<Icon name={colorScheme === "dark" ? "IconSun" : "IconMoon"} />}
+        >
+          Switch to {colorScheme === "dark" ? "Light" : "Dark"} mode
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
