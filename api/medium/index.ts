@@ -18,7 +18,7 @@ export class MediumApiClient {
   }
 
   public async publish(): Promise<PublishBlogResponse> {
-    return { url: "" };
+    return { url: "", id: "" };
   }
 
   public async getAuthUser(): Promise<BlogUser> {

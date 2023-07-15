@@ -2,9 +2,10 @@
 import { badgeStyles } from "@/app/dashboard/components/Blogs";
 import DevToLogoSrc from "@/assets/logos/dev-to.png";
 import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
-import Icon from "@/components/Icon";
+import Icon, { IconNames } from "@/components/Icon";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { formatDate } from "@/lib/utils";
+import { AppProps } from "@/types";
 import {
   Badge,
   CloseButton,
@@ -15,6 +16,7 @@ import {
   Stack,
   Text,
   Textarea,
+  useMantineTheme,
 } from "@mantine/core";
 import Image from "next/image";
 import React from "react";
@@ -53,37 +55,19 @@ export default function BlogPrimaryDetails() {
         />
       </Stack>
       <Stack>
-        <Flex align="center">
-          <Group noWrap className="w-full max-w-[250px]" align="center">
-            <Icon size={22} name="IconInfoCircle" />
-            <Text size="md" className="font-medium">
-              Status
-            </Text>
-          </Group>
+        <KeyValuePairDisplay title="Status" iconName="IconInfoCircle">
           <div className="flex-1">
             <Badge size="lg" color={badgeStyle.color}>
               {badgeStyle.label}
             </Badge>
           </div>
-        </Flex>
-        <Flex align="center">
-          <Group noWrap className="w-full max-w-[250px]" align="center">
-            <Icon name="IconTags" size={22} />
-            <Text size="md" className="font-medium">
-              Tags
-            </Text>
-          </Group>
+        </KeyValuePairDisplay>
+        <KeyValuePairDisplay title="Tags" iconName="IconTags">
           <BlogTags />
-        </Flex>
+        </KeyValuePairDisplay>
         {blog.status === "PUBLISHED" && (
           <React.Fragment>
-            <Flex align="center">
-              <Group noWrap className="w-full max-w-[250px]" align="center">
-                <Icon size={22} name="IconBookUpload" />
-                <Text size="md" className="font-medium">
-                  Published on
-                </Text>
-              </Group>
+            <KeyValuePairDisplay title="Published on" iconName="IconBookUpload">
               <div className="flex w-full gap-2">
                 {blog.devToBlogUrl && (
                   <a href={blog.devToBlogUrl} target="_blank" rel="noopener noreferrer">
@@ -96,22 +80,43 @@ export default function BlogPrimaryDetails() {
                   </a>
                 )}
               </div>
-            </Flex>
-            <Flex align="center">
-              <Group noWrap className="w-full max-w-[250px]" align="center">
-                <Icon size={22} name="IconCalendarEvent" />
-                <Text size="md" className="font-medium">
-                  Last published
-                </Text>
-              </Group>
+            </KeyValuePairDisplay>
+            <KeyValuePairDisplay title="Last published" iconName="IconCalendarEvent">
               <div className="flex-1 w-full gap-2">
                 {formatDate(blog.last_published_at as string)}
               </div>
-            </Flex>
+            </KeyValuePairDisplay>
           </React.Fragment>
         )}
       </Stack>
     </Stack>
+  );
+}
+
+function KeyValuePairDisplay(
+  props: {
+    title: string;
+    iconName: IconNames;
+  } & AppProps
+) {
+  const { title, children, iconName } = props;
+  const theme = useMantineTheme();
+  const { isOverXs } = useMediaQuery();
+  return (
+    <Flex
+      align={isOverXs ? "center" : "start"}
+      gap={isOverXs ? undefined : 16}
+      direction={isOverXs ? "row" : "column"}
+      w="100%"
+    >
+      <Group noWrap className="w-full max-w-[250px]" align="center">
+        <Icon color={theme.colors.gray[6]} name={iconName} size={22} />
+        <Text size="md" className="font-medium">
+          {title}
+        </Text>
+      </Group>
+      {children}
+    </Flex>
   );
 }
 

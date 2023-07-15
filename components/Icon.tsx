@@ -1,7 +1,9 @@
 import * as icons from "@tabler/icons-react";
 
+export type IconNames = keyof Omit<typeof icons, "createReactComponent">;
+
 const Icon = (props: {
-  name: keyof Omit<typeof icons, "createReactComponent">;
+  name: IconNames;
   color?: string;
   size?: number | string;
   stroke?: number;

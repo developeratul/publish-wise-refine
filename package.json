@@ -63,6 +63,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
+    "sharp": "^0.32.3",
     "showdown": "^2.1.0",
     "superjson": "^1.12.4",
     "tailwind-merge": "^1.13.2",

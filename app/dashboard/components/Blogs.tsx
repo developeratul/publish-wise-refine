@@ -29,13 +29,24 @@ import { CreateNewBlogButton } from "./Header";
 
 export default function DashboardBlogsSection() {
   const { blogs } = useDashboardContext();
+  const [hydrated, setHydrated] = React.useState(false);
   const { isOverSm, isOverXl, isOverXs } = useMediaQuery();
   const theme = useMantineTheme();
+
+  const titleColor = useColorModeValue(theme.black, theme.white);
+
+  React.useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) {
+    return <></>;
+  }
 
   return (
     <Stack>
       <Group position="apart">
-        <Title color={useColorModeValue(theme.black, theme.white)} order={2}>
+        <Title color={titleColor} order={2}>
           Your blogs ({blogs.length})
         </Title>
         <Group></Group>
@@ -84,21 +95,16 @@ export const badgeStyles: Record<BlogStatus, { color: DefaultMantineColor; label
 
 function BlogItem(props: Blog) {
   const blog = props;
-  const [hydrated, setHydrated] = React.useState(false);
 
   const badgeStyle = badgeStyles[blog.status];
-  const coverImageUrl = getFileUrl(
-    "blog-covers",
-    blog.devToArticleCoverImagePath || blog.hashNodeArticleCoverImagePath || ""
-  );
-
-  React.useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  if (!hydrated) {
-    return <></>;
-  }
+  const hasCoverImage: boolean =
+    !!blog.devToArticleCoverImagePath || !!blog.hashNodeArticleCoverImagePath;
+  const coverImageUrl = hasCoverImage
+    ? getFileUrl(
+        "blog-covers",
+        blog.devToArticleCoverImagePath || blog.hashNodeArticleCoverImagePath || ""
+      )
+    : null;
 
   return (
     <Card withBorder>
