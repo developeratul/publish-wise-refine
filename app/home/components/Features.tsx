@@ -6,6 +6,7 @@ import DistractionFreeIconSrc from "@/assets/svg/distraction-free-icon.svg";
 import WriteOncePublishTwiceIconSrc from "@/assets/svg/publish-multiple-times-icon.svg";
 import UpdateOnceReflectTwiceIcon from "@/assets/svg/update-once-reflect-twice-icon.svg";
 import useColorModeValue from "@/hooks/useColorModeValue";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { AppProps } from "@/types";
 import { Box, Center, Container, SimpleGrid, Stack, Title, useMantineTheme } from "@mantine/core";
 import Image from "next/image";
@@ -48,11 +49,12 @@ function SingleFeature(props: { label: string; icon: React.ReactNode; maw?: numb
 }
 
 export default function Features() {
+  const { isOverXs, isOverMd } = useMediaQuery();
   return (
     <Container size="md">
       <Center py={100}>
         <Stack spacing={36}>
-          <SimpleGrid cols={3} spacing={50}>
+          <SimpleGrid cols={isOverXs ? (isOverMd ? 3 : 2) : 1} spacing={50}>
             <SingleFeature
               label="Notion like experience"
               maw={150}
