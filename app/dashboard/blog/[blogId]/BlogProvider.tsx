@@ -1,15 +1,13 @@
 "use client";
 
 import { useBaseEditor } from "@/lib/editor";
-import { supabaseClient } from "@/lib/supabase";
 import { AppProps, Blog } from "@/types";
 import { UseFormReturnType, useForm } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
-import { useMutation } from "@tanstack/react-query";
+import { useUpdate } from "@refinedev/core";
 import { Editor } from "@tiptap/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
-import { toast } from "react-hot-toast";
 import ImportBlogModal from "./components/ImportBlogModal";
 
 interface BlogContextInitialState {
@@ -54,34 +52,23 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
       }
     },
   });
-
-  const { mutateAsync, isLoading, isSuccess } = useMutation({
-    mutationKey: ["update-blog"],
-    mutationFn: async (values: BlogEditForm) => {
-      const { error, data } = await supabaseClient
-        .from("blogs")
-        .update({ ...values })
-        .eq("id", blog.id);
-
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-
-      return data;
-    },
-  });
+  const { mutateAsync, isLoading, isSuccess } = useUpdate<Blog>();
   const router = useRouter();
 
   const saveBlogChanges = React.useCallback(
     async (values: BlogEditForm) => {
       try {
-        await mutateAsync(values);
+        await mutateAsync({
+          resource: "blogs",
+          id: blog.id,
+          values,
+          successNotification: false,
+        });
       } catch (err) {
         //
       }
     },
-    [mutateAsync]
+    [blog.id, mutateAsync]
   );
 
   // * Autosave the changes
@@ -104,10 +91,17 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
     return () => router.refresh();
   }, [router]);
 
+  const contextValue: BlogContextInitialState = {
+    blog,
+    form,
+    isSaving: isLoading,
+    isSavingSuccess: isSuccess,
+    isEditingMode,
+    editor,
+  };
+
   return (
-    <BlogContext.Provider
-      value={{ blog, form, isSaving: isLoading, isSavingSuccess: isSuccess, isEditingMode, editor }}
-    >
+    <BlogContext.Provider value={contextValue}>
       <ImportBlogModal>{children}</ImportBlogModal>
     </BlogContext.Provider>
   );

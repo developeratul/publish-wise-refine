@@ -1,10 +1,9 @@
 "use client";
 
-import { supabaseClient } from "@/lib/supabase";
-import { AppProps } from "@/types";
+import { AppProps, Blog } from "@/types";
 import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useMutation } from "@tanstack/react-query";
+import { useDelete } from "@refinedev/core";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "react-hot-toast";
@@ -19,16 +18,7 @@ export default function DeleteBlogProvider(props: AppProps) {
   const { children } = props;
   const [blogId, setBlogId] = React.useState("");
   const [opened, { open, close }] = useDisclosure(false);
-  const { isLoading, mutateAsync } = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabaseClient.from("blogs").delete().eq("id", blogId);
-
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-    },
-  });
+  const { mutateAsync, isLoading } = useDelete<Blog>();
   const router = useRouter();
 
   const openDeleteBlogModal: DeleteBlogInitialState["openDeleteBlogModal"] = (blogId) => {
@@ -43,11 +33,14 @@ export default function DeleteBlogProvider(props: AppProps) {
 
   const handleDeleteBlog = async () => {
     try {
-      await toast.promise(mutateAsync(), {
-        loading: "Deleting blog...",
-        success: "The blog has been deleted",
-        error: "Unexpected error",
-      });
+      await toast.promise(
+        mutateAsync({ resource: "blogs", id: blogId, successNotification: false }),
+        {
+          loading: "Deleting blog...",
+          success: "The blog has been deleted",
+          error: "Unexpected error",
+        }
+      );
       closeModal();
       router.push("/dashboard");
       router.refresh();

@@ -303,9 +303,7 @@ function SingleIntegration(props: SingleIntegrationProps) {
                 </Popover.Target>
                 <Popover.Dropdown w="100%" maw={400}>
                   <Stack>
-                    <Title order={3} color="white">
-                      Are you sure?
-                    </Title>
+                    <Title order={3}>Are you sure?</Title>
                     <Text>
                       Your account will get disconnected from PublishWise and will require a
                       reconnection

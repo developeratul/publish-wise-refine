@@ -46,7 +46,7 @@ export default function DashboardBlogsSection() {
   return (
     <Stack>
       <Group position="apart">
-        <Title color={titleColor} order={2}>
+        <Title weight={500} color={titleColor} order={2}>
           Your blogs ({blogs.length})
         </Title>
         <Group></Group>

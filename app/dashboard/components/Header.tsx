@@ -1,9 +1,9 @@
 "use client";
 import Icon from "@/components/Icon";
 import useColorModeValue from "@/hooks/useColorModeValue";
-import { supabaseClient } from "@/lib/supabase";
+import { Blog } from "@/types";
 import { Button, Group, Stack, Title, useMantineTheme } from "@mantine/core";
-import { useMutation } from "@tanstack/react-query";
+import { useCreate } from "@refinedev/core";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useUserContext } from "../providers/user";
@@ -15,7 +15,7 @@ export default function DashboardHeader() {
   return (
     <Group spacing="xs" position="apart" align="center">
       <Stack>
-        <Title color={useColorModeValue(theme.black, theme.white)} order={2}>
+        <Title weight={500} color={useColorModeValue(theme.black, theme.white)} order={2}>
           Welcome back, {user.user_metadata.first_name}
         </Title>
       </Stack>
@@ -26,32 +26,29 @@ export default function DashboardHeader() {
 
 export function CreateNewBlogButton() {
   const user = useUserContext();
-
-  const { mutateAsync, isLoading } = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabaseClient
-        .from("blogs")
-        .insert([{ user_id: user?.id as string, title: "Untitled" }])
-        .select("id");
-
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-
-      const blogWithId = data[0];
-
-      return blogWithId;
-    },
-  });
+  const { mutateAsync, isLoading } = useCreate<Blog>();
   const router = useRouter();
 
   const handleCreateNewDraft = async () => {
     try {
-      const { id } = await mutateAsync();
+      const { data } = await toast.promise(
+        mutateAsync({
+          resource: "blogs",
+          values: { user_id: user.id, title: "Untitled" },
+          successNotification: false,
+          meta: { select: "id" },
+        }),
+        {
+          loading: "Creating a new draft",
+          success: "Draft created, getting you there 🚀",
+          error: "Error while creating a draft",
+        }
+      );
+      const { id } = data;
       router.refresh();
       router.push(`/dashboard/blog/${id}?type=edit`);
     } catch (err) {
+      console.log({ err });
       //
     }
   };
