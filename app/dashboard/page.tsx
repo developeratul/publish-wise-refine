@@ -2,6 +2,7 @@ import { Database } from "@/types/supabase";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import DashboardBlogsSection from "./components/Blogs";
+import ConnectedBlogAccounts from "./components/ConnectedBlogAccounts";
 import DashboardTopSection from "./components/TopSection";
 import DashboardProvider from "./providers/dashboard";
 
@@ -25,6 +26,7 @@ export default async function DashboardRootPage() {
   return (
     <DashboardProvider user={user} blogs={data}>
       <DashboardTopSection />
+      <ConnectedBlogAccounts />
       <DashboardBlogsSection />
     </DashboardProvider>
   );

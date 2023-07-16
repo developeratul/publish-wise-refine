@@ -51,12 +51,6 @@ export default function DashboardBlogsSection() {
         </Title>
         <Group></Group>
       </Group>
-      {/**
-       * Base 1
-       * over Xs 2
-       * over Sm 3
-       * over xl 4
-       */}
       <Conditional
         condition={blogs.length > 0}
         fallback={
@@ -67,6 +61,10 @@ export default function DashboardBlogsSection() {
           />
         }
         component={
+          //  Base 1
+          //  over Xs 2
+          //  over Sm 3
+          //  over xl 4
           <SimpleGrid cols={isOverXs ? (isOverSm ? (isOverXl ? 4 : 3) : 2) : 1}>
             {blogs.map((blog) => (
               <BlogItem {...blog} key={blog.id} />
@@ -108,10 +106,10 @@ function BlogItem(props: Blog) {
 
   return (
     <Card withBorder>
-      <Card.Section mb="md">
+      <Card.Section h={120} mb="md">
         <Image
           style={{ aspectRatio: "100/42" }}
-          height={150}
+          height={120}
           src={coverImageUrl}
           withPlaceholder
           fit="cover"
@@ -120,7 +118,7 @@ function BlogItem(props: Blog) {
       </Card.Section>
       <Stack>
         <Stack spacing="xs">
-          <Text lineClamp={1}>{blog.title}</Text>
+          <Text lineClamp={2}>{blog.title}</Text>
           <Text size="xs" color="dimmed">
             {formatDate(blog.created_at)}
           </Text>
