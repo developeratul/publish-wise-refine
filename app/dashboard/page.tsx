@@ -1,10 +1,11 @@
 import { Database } from "@/types/supabase";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import nextDynamic from "next/dynamic";
 import { cookies } from "next/headers";
-import DashboardBlogsSection from "./components/Blogs";
-import ConnectedBlogAccounts from "./components/ConnectedBlogAccounts";
-import DashboardTopSection from "./components/TopSection";
-import DashboardProvider from "./providers/dashboard";
+const DashboardBlogsSection = nextDynamic(() => import("./components/Blogs"));
+const ConnectedBlogAccounts = nextDynamic(() => import("./components/ConnectedBlogAccounts"));
+const DashboardTopSection = nextDynamic(() => import("./components/TopSection"));
+const DashboardProvider = nextDynamic(() => import("./providers/dashboard"));
 
 /**
  * Dashboard header

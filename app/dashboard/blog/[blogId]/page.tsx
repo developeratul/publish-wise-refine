@@ -1,12 +1,13 @@
 import { Database } from "@/types/supabase";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import nextDynamic from "next/dynamic";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import BlogProvider from "./BlogProvider";
-import BlogActions from "./components/BlogActions";
-import BlogContent from "./components/BlogContent";
-import BlogHeader from "./components/BlogHeader";
-import BlogPrimaryDetails from "./components/BlogPrimaryDetails";
+const BlogProvider = nextDynamic(() => import("./BlogProvider"));
+const BlogActions = nextDynamic(() => import("./components/BlogActions"));
+const BlogContent = nextDynamic(() => import("./components/BlogContent"));
+const BlogHeader = nextDynamic(() => import("./components/BlogHeader"));
+const BlogPrimaryDetails = nextDynamic(() => import("./components/BlogPrimaryDetails"));
 
 interface PageProps {
   params: { blogId: string };
