@@ -34,22 +34,19 @@ export default function RootLayout(props: AppProps) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-48LSD3965M"></Script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              <!-- Google tag (gtag.js) -->
-              <script async src="https://www.googletagmanager.com/gtag/js?id=G-48LSD3965M"></script>
-              <script>
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-
-                gtag('config', 'G-48LSD3965M');
-              </script>
-            `,
-          }}
-        ></script>
+        <Script
+          strategy="lazyOnload"
+          src="https://www.googletagmanager.com/gtag/js?id=G-48LSD3965M"
+        />
+        <Script id="gtag" strategy="lazyOnload">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+              
+            gtag('config', 'G-48LSD3965M');
+          `}
+        </Script>
         <AppProvider>{children}</AppProvider>
       </body>
     </html>
