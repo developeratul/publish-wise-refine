@@ -2,6 +2,7 @@ import { Database } from "@/types/supabase";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import nextDynamic from "next/dynamic";
 import { cookies } from "next/headers";
+import React from "react";
 const DashboardBlogsSection = nextDynamic(() => import("./components/Blogs"));
 const ConnectedBlogAccounts = nextDynamic(() => import("./components/ConnectedBlogAccounts"));
 const DashboardTopSection = nextDynamic(() => import("./components/TopSection"));
@@ -25,11 +26,13 @@ export default async function DashboardRootPage() {
   if (error) throw error.message;
 
   return (
-    <DashboardProvider user={user} blogs={data}>
-      <DashboardTopSection />
-      <ConnectedBlogAccounts />
-      <DashboardBlogsSection />
-    </DashboardProvider>
+    <React.Suspense fallback={<h1>Loading...</h1>}>
+      <DashboardProvider user={user} blogs={data}>
+        <DashboardTopSection />
+        <ConnectedBlogAccounts />
+        <DashboardBlogsSection />
+      </DashboardProvider>
+    </React.Suspense>
   );
 }
 

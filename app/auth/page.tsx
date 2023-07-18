@@ -14,7 +14,6 @@ import { hasLength, isEmail, useForm } from "@mantine/form";
 import { AuthError } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
 const initialValues = { email: "", password: "" };
@@ -38,13 +37,12 @@ export default function LoginPage() {
       return data;
     },
   });
-  const router = useRouter();
 
   const handleSubmit = async (values: typeof initialValues) => {
     try {
       const { user } = await mutateAsync(values);
-      router.push("/dashboard");
       toast.success(`Welcome back, ${user.user_metadata.first_name}!`);
+      window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof AuthError) {
         toast.error(err.message);
