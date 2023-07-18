@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     card: "summary",
     creator: "@developeratul",
   },
+  metadataBase: new URL("http://PublishWise.ink"),
 };
 
 export default function RootLayout(props: AppProps) {
