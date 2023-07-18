@@ -70,7 +70,7 @@ export default function SignUpPage() {
 
   return (
     <Stack justify="center" spacing="xl">
-      <Title order={2} align="center">
+      <Title order={2} weight={500} align="center">
         Sign up
       </Title>
       <form className="flex flex-col gap-4" onSubmit={onSubmit(handleSubmit)}>

@@ -52,7 +52,7 @@ export default function LoginPage() {
 
   return (
     <Stack justify="center" spacing="xl">
-      <Title order={2} align="center">
+      <Title weight={500} order={2} align="center">
         Sign in
       </Title>
       <form className="flex flex-col gap-4" onSubmit={onSubmit(handleSubmit)}>

@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <Stack>
-      <Title order={2} align="center">
+      <Title order={2} weight={500} align="center">
         Forgot password
       </Title>
       <form className="flex flex-col gap-4" onSubmit={onSubmit(handleSubmit)}>

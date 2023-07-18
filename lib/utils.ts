@@ -1,4 +1,3 @@
-"use client";
 import { Json } from "@/types/supabase";
 import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
