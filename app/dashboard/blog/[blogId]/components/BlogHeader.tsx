@@ -2,7 +2,7 @@
 
 import { useDeleteBlogContext } from "@/app/dashboard/providers/delete-blog";
 import Icon from "@/components/Icon";
-import { generateSlug, htmlToMarkdown } from "@/helpers/blog";
+import { generateSlug } from "@/helpers/blog";
 import { ActionIcon, Anchor, Badge, Breadcrumbs, Group, Menu, Text } from "@mantine/core";
 import { saveAs } from "file-saver";
 import Link from "next/link";
@@ -99,11 +99,11 @@ function ExportBlog(props: { children: React.ReactElement; format: "html" | "mar
     const mimeType = mimeTypes[format];
 
     const html = editor.getHTML();
+    const markdown = editor.storage.markdown.getMarkdown();
 
     let content;
 
     if (format === "markdown") {
-      const markdown = htmlToMarkdown(html);
       content = markdown;
     } else {
       content = html;

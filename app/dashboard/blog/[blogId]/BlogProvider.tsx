@@ -24,6 +24,7 @@ const BlogContext = React.createContext<BlogContextInitialState | undefined>(und
 interface BlogEditForm {
   title: string;
   content: string;
+  contentMarkdown: string;
   tags: string[];
 }
 
@@ -33,6 +34,7 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
     initialValues: {
       title: blog.title,
       content: blog.content || "",
+      contentMarkdown: blog.contentMarkdown || "",
       tags: (blog.tags as string[]) || [],
     },
   });
@@ -45,10 +47,12 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
     editable: isEditingMode,
     onUpdate({ editor }) {
       form.setFieldValue("content", editor.getHTML());
+      form.setFieldValue("contentMarkdown", editor.storage.markdown.getMarkdown());
     },
     onFocus({ editor, event }) {
       if (event.isTrusted) {
         form.setFieldValue("content", editor.getHTML());
+        form.setFieldValue("contentMarkdown", editor.storage.markdown.getMarkdown());
       }
     },
   });

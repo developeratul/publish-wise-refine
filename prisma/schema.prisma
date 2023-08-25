@@ -75,6 +75,7 @@ model Blog {
   status            BlogStatus @default(DRAFT)
   title             String
   content           String?    @default("")
+  contentMarkdown   String?    @default("")
   tags              Json?
   created_at        DateTime   @default(now()) @db.Timestamptz(6)
   last_published_at DateTime?  @db.Timestamp()

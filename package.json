@@ -66,6 +66,7 @@
     "showdown": "^2.1.0",
     "superjson": "^1.12.4",
     "tailwind-merge": "^1.13.2",
+    "tiptap-markdown": "^0.8.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

@@ -12,6 +12,7 @@ export interface Database {
       blogs: {
         Row: {
           content: string | null
+          contentMarkdown: string | null
           created_at: string
           devToArticleCoverImagePath: string | null
           devToArticleId: string | null
@@ -31,6 +32,7 @@ export interface Database {
         }
         Insert: {
           content?: string | null
+          contentMarkdown?: string | null
           created_at?: string
           devToArticleCoverImagePath?: string | null
           devToArticleId?: string | null
@@ -50,6 +52,7 @@ export interface Database {
         }
         Update: {
           content?: string | null
+          contentMarkdown?: string | null
           created_at?: string
           devToArticleCoverImagePath?: string | null
           devToArticleId?: string | null

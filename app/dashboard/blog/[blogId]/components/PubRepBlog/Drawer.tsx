@@ -5,7 +5,6 @@ import DevToLogoSrc from "@/assets/logos/dev-to.png";
 import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
 import MediumLogoSrc from "@/assets/logos/medium.png";
 import { FullPageRelativeLoader } from "@/components/Loader";
-import { htmlToMarkdown } from "@/helpers/blog";
 import { getFileUrl } from "@/helpers/file";
 import { supabaseClient } from "@/lib/supabase";
 import { BlogProviders, PublishBlogResponse } from "@/types";
@@ -94,8 +93,6 @@ export default function PubRepBlogDrawer() {
     },
   ];
 
-  const blogContentMarkdown = htmlToMarkdown(blogEditingForm.values.content || "");
-
   const devToCoverImageUrl = form.values.devTo.coverImagePath
     ? getFileUrl("blog-covers", form.values.devTo.coverImagePath)
     : null;
@@ -103,9 +100,11 @@ export default function PubRepBlogDrawer() {
     ? getFileUrl("blog-covers", form.values.hashNode.coverImagePath)
     : null;
 
+  const { contentMarkdown } = blogEditingForm.values;
+
   const devToPayload: DevToArticleInput & { apiKey: string } = {
     title: blogEditingForm.values.title,
-    body_markdown: blogContentMarkdown,
+    body_markdown: contentMarkdown as string,
     tags: form.values.devTo.tags,
     apiKey: apiKeys.devToAPIKey as string,
     main_image: devToCoverImageUrl,
@@ -113,7 +112,7 @@ export default function PubRepBlogDrawer() {
 
   const hashNodePayload: HashNodeArticleInput & { apiKey: string; username: string } = {
     title: blogEditingForm.values.title,
-    contentMarkdown: blogContentMarkdown,
+    contentMarkdown: contentMarkdown as string,
     coverImageURL: hashNodeCoverImageUrl || null,
     tags: form.values.hashNode.tags.map((tagId) => ({ _id: tagId })),
     slug: form.values.hashNode.slug,

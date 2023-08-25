@@ -30,6 +30,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { lowlight } from "lowlight";
 import React from "react";
 import { toast } from "react-hot-toast";
+import { Markdown } from "tiptap-markdown";
 import { v4 as uuid } from "uuid";
 import { supabaseClient } from "./supabase";
 
@@ -105,6 +106,16 @@ export function useBaseEditor(props?: Omit<Partial<EditorOptions>, "extensions">
       SubScript,
       Highlight,
       Image,
+      Markdown.configure({
+        html: true,
+        tightLists: true,
+        tightListClass: "tight",
+        bulletListMarker: "-",
+        linkify: false,
+        breaks: false,
+        transformPastedText: false,
+        transformCopiedText: false,
+      }),
       CodeBlockLowlight.extend({
         addNodeView() {
           return ReactNodeViewRenderer(CodeBlockComponent);
