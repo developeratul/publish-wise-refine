@@ -15,7 +15,20 @@ import { MantineProviderProps } from "@mantine/core";
  * [9]
  */
 export const theme: MantineProviderProps["theme"] = {
-  colors: {},
+  colors: {
+    gray: [
+      "#E8E8EE",
+      "#CECDDA",
+      "#9E9CB5",
+      "#6E6B8F",
+      "#48465D",
+      "#22212C",
+      "#1B1A23",
+      "#14141A",
+      "#0D0D11",
+      "#070709",
+    ],
+  },
   white: "#F8F8F2",
   black: "#151320",
   // primaryColor: "violet",

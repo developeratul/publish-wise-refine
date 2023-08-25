@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--max_old_space_size=4096 refine dev",
-    "build": "refine build",
-    "start": "refine start",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint",
-    "refine": "refine",
     "update-types": "supabase gen types typescript --project-id tpwpzkeqppkvywajnezp > types/supabase.ts",
     "push-db": "prisma db push --skip-generate"
   },
