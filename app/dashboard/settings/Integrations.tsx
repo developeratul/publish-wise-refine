@@ -35,10 +35,10 @@ import superjson from "superjson";
 
 export default function Integrations() {
   return (
-    <Stack spacing="xl">
+    <Stack spacing={50}>
       <Stack spacing="xs">
         <Title order={2}>Integrations</Title>
-        <Text className="font-medium">Your API keys are stored locally for security concerns</Text>
+        <Text>Your API keys are stored locally for security concerns</Text>
       </Stack>
       <Stack spacing={50}>
         <SingleIntegration
@@ -241,9 +241,11 @@ function SingleIntegration(props: SingleIntegrationProps) {
       <Stack maw={350} spacing="xs">
         <Group>
           <Image width={50} src={logoSrc} alt={`${name} logo`} />
-          <Title order={3}>{name}</Title>
+          <Title order={3} weight={500}>
+            {name}
+          </Title>
         </Group>
-        <Text>{description}</Text>
+        <Text color="dimmed">{description}</Text>
       </Stack>
       <Card withBorder sx={{ flex: 1 }}>
         <Stack align="end">
