@@ -1,6 +1,6 @@
 import { BlogUser, PublishBlogResponse } from "@/types";
 import Axios, { AxiosInstance } from "axios";
-import { MediumUser } from "./types";
+import { MediumArticleInput, MediumPublishResponse, MediumUser } from "./types";
 
 export class MediumApiClient {
   private _apiKey: string;
@@ -17,8 +17,12 @@ export class MediumApiClient {
     });
   }
 
-  public async publish(): Promise<PublishBlogResponse> {
-    return { url: "", id: "" };
+  public async publish(input: MediumArticleInput): Promise<PublishBlogResponse> {
+    const { id: userId } = await this.getAuthUser();
+    const {
+      data: { id, url },
+    } = await this.axios.post<MediumPublishResponse>(`/users/${userId}/posts`, input);
+    return { id, url };
   }
 
   public async getAuthUser(): Promise<BlogUser> {
