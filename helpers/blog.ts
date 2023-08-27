@@ -10,12 +10,6 @@ export function generateSlug(blogTitle: string): string {
   return slug;
 }
 
-export function htmlToMarkdown(html: string) {
-  const converter = new Converter();
-  const markdown = converter.makeMarkdown(html);
-  return markdown;
-}
-
 export function markdownToHtml(markdown: string) {
   const converter = new Converter();
   return converter.makeHtml(markdown);
