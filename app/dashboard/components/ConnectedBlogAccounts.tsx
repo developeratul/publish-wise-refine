@@ -38,7 +38,9 @@ function SingleBlogAccount(props: {
       <Stack spacing="xl">
         <Image src={iconSrc} alt={title} width={50} />
         <Stack spacing="xs">
-          <Title order={3}>{title}</Title>
+          <Title order={4} weight={600}>
+            {title}
+          </Title>
           <Conditional
             condition={isConnected && !!user}
             component={

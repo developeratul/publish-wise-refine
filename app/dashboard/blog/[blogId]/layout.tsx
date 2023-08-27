@@ -14,7 +14,7 @@ export default function BlogDetailsPageLayout(props: AppProps) {
           {(transitionStyles) => (
             <Stack style={transitionStyles} spacing={0}>
               <ActionIcon
-                color="blue"
+                color="primary"
                 variant="subtle"
                 size="xl"
                 onClick={() => scrollTo({ y: 0 })}
@@ -22,7 +22,7 @@ export default function BlogDetailsPageLayout(props: AppProps) {
                 <Icon name="IconArrowUp" size={24} />
               </ActionIcon>
               <ActionIcon
-                color="blue"
+                color="primary"
                 variant="subtle"
                 size="xl"
                 onClick={() => scrollTo({ y: document.body.scrollHeight })}

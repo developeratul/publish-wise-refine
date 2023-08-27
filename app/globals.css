@@ -7,13 +7,15 @@ html {
 }
 
 .ProseMirror img.ProseMirror-selectednode {
-  outline: 1px solid #4dabf7;
+  outline: 1px solid #9580ff;
 }
 
 .ProseMirror img {
   border-radius: 5px;
   display: block;
   margin: auto;
+  width: 100%;
+  max-width: 700px;
 }
 
 .code-block {
@@ -25,4 +27,17 @@ html {
   width: max-content;
   overflow-x: hidden;
   white-space: pre;
+}
+
+.ProseMirror > h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+}
+
+.ProseMirror {
+  font-size: 1.1rem;
 }
