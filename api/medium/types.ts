@@ -11,7 +11,7 @@ export interface MediumArticleInput {
   contentFormat: "html" | "markdown";
   content: string;
   tags: string[];
-  canonicalUrl: string;
+  canonicalUrl?: string;
   publishStatus: "public" | "draft" | "unlisted";
 }
 

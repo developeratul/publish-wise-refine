@@ -17,3 +17,5 @@ export const hashNodePostPayloadSchema = commonPostPayloadSchema.extend({
   subtitle: z.string().optional(),
   slug: z.string().nonempty(),
 });
+
+export const mediumPostPayloadSchema = devToPostPayloadSchema;

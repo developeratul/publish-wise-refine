@@ -9,7 +9,7 @@ export class MediumApiClient {
   constructor(_apiKey: string) {
     this._apiKey = _apiKey;
     this.axios = Axios.create({
-      baseURL: "http://api.medium.com/v1",
+      baseURL: "https://api.medium.com/v1",
       headers: {
         Authorization: `Bearer ${this._apiKey}`,
         accept: "application/json",
@@ -18,17 +18,17 @@ export class MediumApiClient {
   }
 
   public async publish(input: MediumArticleInput): Promise<PublishBlogResponse> {
-    const { id: userId } = await this.getAuthUser();
+    const user = await this.getAuthUser();
     const {
-      data: { id, url },
-    } = await this.axios.post<MediumPublishResponse>(`/users/${userId}/posts`, input);
+      data: { data },
+    } = await this.axios.post<{ data: MediumPublishResponse }>(`/users/${user.id}/posts`, input);
+    const { id, url } = data;
     return { id, url };
   }
 
   public async getAuthUser(): Promise<BlogUser> {
-    const {
-      data: { id, name, username, imageUrl },
-    } = await this.axios.get<MediumUser>("/me");
+    const { data } = await this.axios.get<{ data: MediumUser }>("/me");
+    const { id, name, username, imageUrl } = data.data;
     return { id, name, username, avatarUrl: imageUrl };
   }
 }

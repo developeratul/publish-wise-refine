@@ -61,7 +61,7 @@ export default function Integrations() {
         <SingleIntegration
           provider="medium"
           name="Medium"
-          linkUrl="https://medium.com/me/settings"
+          linkUrl="https://medium.com/me/settings/security"
           description="Medium is a place to write, read, and connect."
           apiKeyName="mediumAPIKey"
           logoSrc={MediumLogoSrc}
@@ -124,7 +124,14 @@ function UserBlogAccountDetails(props: UserBlogAccountDetailsProps) {
         </Title>
         <Text lineClamp={1}>@{user.username}</Text>
         <Group spacing="xs" noWrap>
-          <Text lineClamp={1} size="xs" color="dimmed">
+          <Text
+            w="100%"
+            maw={150}
+            sx={{ whiteSpace: "normal" }}
+            lineClamp={1}
+            size="xs"
+            color="dimmed"
+          >
             {apiKey}
           </Text>
           <CopyButton value={apiKey as string} timeout={2000}>

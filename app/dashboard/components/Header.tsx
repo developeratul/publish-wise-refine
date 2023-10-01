@@ -48,7 +48,6 @@ export function CreateNewBlogButton() {
       router.refresh();
       router.push(`/dashboard/blog/${id}?type=edit`);
     } catch (err) {
-      console.log({ err });
       //
     }
   };

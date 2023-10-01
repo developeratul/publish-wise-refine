@@ -61,8 +61,6 @@ export async function POST(req: Request) {
 
     let postId, postUrl;
 
-    console.log({ type });
-
     if (type === "PUBLISH") {
       const { id, url } = await client.publish(username, articleInput);
       postId = id;
