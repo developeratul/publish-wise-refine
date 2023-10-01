@@ -67,7 +67,8 @@
     "superjson": "^1.12.4",
     "tailwind-merge": "^1.13.2",
     "tiptap-markdown": "^0.8.2",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "zod": "^3.22.2"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.5",
@@ -81,7 +82,7 @@
     "cross-env": "^7.0.3",
     "postcss": "^8.4.24",
     "prisma": "^4.16.1",
-    "supabase": ">=1.8.1",
+    "supabase": "^1.8.1",
     "tailwindcss": "^3.3.2",
     "typescript": "^4.7.4"
   }

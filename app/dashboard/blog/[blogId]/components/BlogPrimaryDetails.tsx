@@ -2,6 +2,7 @@
 import { badgeStyles } from "@/app/dashboard/components/Blogs";
 import DevToLogoSrc from "@/assets/logos/dev-to.png";
 import HashNodeLogoSrc from "@/assets/logos/hashnode.png";
+import MediumLogoSrc from "@/assets/logos/medium.png";
 import Icon, { IconNames } from "@/components/Icon";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { formatDate } from "@/lib/utils";
@@ -69,14 +70,19 @@ export default function BlogPrimaryDetails() {
           <React.Fragment>
             <KeyValuePairDisplay title="Published on" iconName="IconBookUpload">
               <div className="flex w-full gap-2">
-                {blog.devToBlogUrl && (
-                  <a href={blog.devToBlogUrl} target="_blank" rel="noopener noreferrer">
+                {blog.devToPostUrl && (
+                  <a href={blog.devToPostUrl} target="_blank" rel="noopener noreferrer">
                     <Image width={25} src={DevToLogoSrc} alt="Dev.to logo" />
                   </a>
                 )}
-                {blog.hashNodeBlogUrl && (
-                  <a href={blog.hashNodeBlogUrl} target="_blank" rel="noopener noreferrer">
+                {blog.hashNodePostUrl && (
+                  <a href={blog.hashNodePostUrl} target="_blank" rel="noopener noreferrer">
                     <Image width={25} src={HashNodeLogoSrc} alt="HashNode logo" />
+                  </a>
+                )}
+                {blog.mediumPostUrl && (
+                  <a href={blog.mediumPostUrl} target="_blank" rel="noopener noreferrer">
+                    <Image width={25} src={MediumLogoSrc} alt="Medium logo" />
                   </a>
                 )}
               </div>

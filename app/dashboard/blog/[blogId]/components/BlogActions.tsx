@@ -1,13 +1,11 @@
 "use client";
 import { Stack } from "@mantine/core";
-import { useBlogContext } from "../BlogProvider";
-import PubRepBlog from "./PubRepBlog";
+import PostBlog from "./Post";
 
 export default function BlogActions() {
-  const { blog } = useBlogContext();
   return (
     <Stack align="end">
-      <PubRepBlog />
+      <PostBlog />
     </Stack>
   );
 }

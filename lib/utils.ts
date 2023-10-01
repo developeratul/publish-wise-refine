@@ -24,5 +24,11 @@ export function absoluteUrl(path: string) {
 }
 
 export function parseJson<T>(json: Json) {
-  return JSON.parse(json?.toString() || "{}") as T;
+  if (typeof json === "string") {
+    return JSON.parse(json) as T;
+  } else if (typeof json === "object" && json !== null) {
+    return json as T;
+  } else {
+    return {} as T;
+  }
 }

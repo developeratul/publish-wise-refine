@@ -81,22 +81,42 @@ model Blog {
   last_published_at DateTime?  @db.Timestamp()
   userId            String     @map("user_id") @db.Uuid
   user              User       @relation(fields: [userId], references: [id])
-  publishingDetails Json?
 
-  // published article ids
-  hashNodeArticleId String?
-  devToArticleId    String?
-  mediumArticleId   String?
+  hashNodePostId  String?
+  hashNodePostUrl String?
 
-  hashNodeArticleCoverImagePath String?
-  devToArticleCoverImagePath    String?
+  devToPostId  String?
+  devToPostUrl String?
 
-  // Published blog urls
-  hashNodeBlogUrl String?
-  devToBlogUrl    String?
-  mediumBlogUrl   String?
+  mediumPostId  String?
+  mediumPostUrl String?
+
+  canonicalUrl String?
+
+  publishingDetais BlogPublishingDetails?
 
   @@map("blogs")
+  @@schema("public")
+}
+
+model BlogPublishingDetails {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  devToTags           Json?
+  devToCoverImagePath String?
+
+  hashNodeSubtitle       String?
+  hashNodeCoverImagePath String?
+  hashNodeSlug           String?
+  hashNodeTags           Json?
+
+  mediumTags           Json?
+  mediumCoverImagePath String?
+
+  blog   Blog   @relation(fields: [blogId], references: [id])
+  blogId String @unique @db.Uuid
+
+  @@map("blog_publishing_details")
   @@schema("public")
 }
 

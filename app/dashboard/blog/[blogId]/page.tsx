@@ -13,25 +13,27 @@ interface PageProps {
   params: { blogId: string };
 }
 
-/**
- * // TODO: Image upload and insert in Blog
- * // TODO: Separation between edit and view blog
- */
 export default async function BlogDetailsByIdPage(props: PageProps) {
   const {
     params: { blogId },
   } = props;
   const supabase = createServerComponentClient<Database>({ cookies });
-  const { data, error } = await supabase.from("blogs").select("*").eq("id", blogId);
+  const blogQuery = await supabase.from("blogs").select("*").eq("id", blogId).single();
 
-  if (error) throw error.message;
+  if (blogQuery.error) throw blogQuery.error.message;
 
-  const blog = data[0];
+  if (!blogQuery.data) return notFound();
 
-  if (!blog) return notFound();
+  const publishingDetailsQuery = await supabase
+    .from("blog_publishing_details")
+    .upsert({ blogId: blogQuery.data.id }, { onConflict: "blogId" })
+    .select("*")
+    .single();
+
+  if (publishingDetailsQuery.error) throw publishingDetailsQuery.error.message;
 
   return (
-    <BlogProvider blog={blog}>
+    <BlogProvider blog={blogQuery.data} publishingDetails={publishingDetailsQuery.data}>
       <BlogHeader />
       <BlogPrimaryDetails />
       <BlogContent />

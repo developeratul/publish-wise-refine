@@ -176,6 +176,9 @@ dependencies:
   uuid:
     specifier: ^9.0.0
     version: 9.0.0
+  zod:
+    specifier: ^3.22.2
+    version: 3.22.2
 
 devDependencies:
   '@types/file-saver':
@@ -212,7 +215,7 @@ devDependencies:
     specifier: ^4.16.1
     version: 4.16.1
   supabase:
-    specifier: '>=1.8.1'
+    specifier: ^1.8.1
     version: 1.8.1
   tailwindcss:
     specifier: ^3.3.2
@@ -9542,6 +9545,10 @@ packages:
 
   /zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
+    dev: false
+
+  /zod@3.22.2:
+    resolution: {integrity: sha512-wvWkphh5WQsJbVk1tbx1l1Ly4yg+XecD+Mq280uBGt9wa5BKSWf4Mhp6GmrkPixhMxmabYY7RbzlwVP32pbGCg==}
     dev: false
 
   /zwitch@1.0.5:

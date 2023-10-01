@@ -26,11 +26,19 @@ export interface BlogApiKeys {
   mediumAPIKey: string | null;
 }
 
-export type BlogStatus = Database["public"]["Enums"]["BlogStatus"];
+export type Tables<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Row"];
+export type Relations<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Relationships"];
+export type Enums<T extends keyof Database["public"]["Enums"]> = Database["public"]["Enums"][T];
+
+export type BlogStatus = Enums<"BlogStatus">;
 
 export type BlogProviders = "medium" | "dev.to" | "hashNode";
 
 export type BlogApiKeyNames = "mediumAPIKey" | "devToAPIKey" | "hashNodeAPIKey";
+
+export type PublishingDetails = Tables<"blog_publishing_details">;
 
 export interface PublishBlogResponse {
   id: string;

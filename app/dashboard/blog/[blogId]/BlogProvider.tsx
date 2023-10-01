@@ -1,7 +1,7 @@
 "use client";
 
 import { useBaseEditor } from "@/lib/editor";
-import { AppProps, Blog } from "@/types";
+import { AppProps, Blog, PublishingDetails } from "@/types";
 import { UseFormReturnType, useForm } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useUpdate } from "@refinedev/core";
@@ -13,6 +13,7 @@ import ImportBlogModal from "./components/ImportBlogModal";
 interface BlogContextInitialState {
   blog: Blog;
   form: UseFormReturnType<BlogEditForm>;
+  publishingDetails: PublishingDetails;
   isSaving: boolean;
   isSavingSuccess: boolean;
   isEditingMode: boolean;
@@ -28,8 +29,10 @@ interface BlogEditForm {
   tags: string[];
 }
 
-export default function BlogProvider(props: AppProps & { blog: Blog }) {
-  const { children, blog } = props;
+export default function BlogProvider(
+  props: AppProps & { blog: Blog; publishingDetails: BlogContextInitialState["publishingDetails"] }
+) {
+  const { children, blog, publishingDetails } = props;
   const form = useForm<BlogEditForm>({
     initialValues: {
       title: blog.title,
@@ -98,6 +101,7 @@ export default function BlogProvider(props: AppProps & { blog: Blog }) {
   const contextValue: BlogContextInitialState = {
     blog,
     form,
+    publishingDetails,
     isSaving: isLoading,
     isSavingSuccess: isSuccess,
     isEditingMode,
