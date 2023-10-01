@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { useBlogContext } from "../../BlogProvider";
+import { devToPostPayloadSchema } from "../../constants";
 import CoverImage from "./CoverImage";
 import PublishModalWrapper, { ModalProps } from "./modal-wrapper";
 
@@ -17,16 +18,9 @@ export interface DevToPublishForm {
   tags: string[];
 }
 
-export const devToPublishPayloadSchema = z.object({
-  apiKey: z.string().nullish(),
-  blogId: z.string(),
-  tags: z.array(z.string()),
-  coverImagePath: z.string().nullish(),
-});
+type DevToPublishPayload = z.infer<typeof devToPostPayloadSchema>;
 
-type DevToPublishPayload = z.infer<typeof devToPublishPayloadSchema>;
-
-export default function DevToPublishModal(props: ModalProps) {
+export default function DevToPostModal(props: ModalProps) {
   const { opened, close } = props;
   const { blog, publishingDetails } = useBlogContext();
   const form = useForm<DevToPublishForm>({
@@ -40,12 +34,12 @@ export default function DevToPublishModal(props: ModalProps) {
 
   const publishMutation = useMutation({
     mutationKey: ["publish-on-dev.to", blog.id],
-    mutationFn: async (data: DevToPublishPayload) =>
+    mutationFn: async (data: Omit<DevToPublishPayload, "type">) =>
       axios.post("/api/dev.to", { ...data, type: "PUBLISH" }),
   });
   const republishMutation = useMutation({
     mutationKey: ["republish-on-dev.to", blog.id],
-    mutationFn: async (data: DevToPublishPayload) =>
+    mutationFn: async (data: Omit<DevToPublishPayload, "type">) =>
       axios.post("/api/dev.to", { ...data, type: "REPUBLISH" }),
   });
   const { mutateAsync, isLoading } = blog.devToPostId ? republishMutation : publishMutation;

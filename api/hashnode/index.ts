@@ -160,9 +160,7 @@ export class HashNodeApiClient {
   > {
     const {
       data: {
-        data: {
-          user: { _id, name, username, photo, publication },
-        },
+        data: { user },
       },
     } = await this.axios.post<{ data: { user: HashnodeUser } }>("/", {
       query: `
@@ -181,6 +179,11 @@ export class HashNodeApiClient {
       `,
       variables: { username: hashNodeUsername },
     });
+
+    if (!user) throw { message: "HashNode user not found", status: 404 };
+
+    const { _id, name, username, photo, publication } = user;
+
     return {
       id: _id,
       name,

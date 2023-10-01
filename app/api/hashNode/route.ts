@@ -1,10 +1,9 @@
-import { DevToApiClient } from "@/api/dev.to";
-import { DevToArticleInput } from "@/api/dev.to/types";
-import { devToPostPayloadSchema } from "@/app/dashboard/blog/[blogId]/constants";
+import { HashNodeApiClient } from "@/api/hashnode";
+import { HashNodeArticleInput } from "@/api/hashnode/types";
+import { hashNodePostPayloadSchema } from "@/app/dashboard/blog/[blogId]/constants";
 import { BAD_REQUEST, NOT_FOUND, UNAUTHORIZED } from "@/lib/exceptions";
 import { Database } from "@/types/supabase";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { AxiosError } from "axios";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -12,16 +11,17 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const parsedBody = devToPostPayloadSchema.safeParse(body);
+    const parsedBody = hashNodePostPayloadSchema.safeParse(body);
 
     if (!parsedBody.success) {
       return BAD_REQUEST("Invalid request body");
     }
 
-    const { blogId, tags, apiKey, coverImagePath, type } = parsedBody.data;
+    const { blogId, tags, apiKey, coverImagePath, type, slug, subtitle, username } =
+      parsedBody.data;
 
-    if (!apiKey) {
-      return UNAUTHORIZED("Your Dev.to account is not connected with PublishWise");
+    if (!apiKey || !username) {
+      return UNAUTHORIZED("Your HashNode account is not connected with PublishWise");
     }
 
     const supabase = createRouteHandlerClient<Database>({ cookies });
@@ -43,33 +43,42 @@ export async function POST(req: Request) {
       return NOT_FOUND();
     }
 
-    const client = new DevToApiClient(apiKey);
+    const client = new HashNodeApiClient(apiKey);
 
-    const articleInput: DevToArticleInput = {
+    const articleInput: HashNodeArticleInput = {
       title: blogQuery.data.title,
-      main_image: coverImagePath
+      coverImageURL: coverImagePath
         ? supabase.storage.from("blog-covers").getPublicUrl(coverImagePath).data.publicUrl
         : null,
-      body_markdown: blogQuery.data.contentMarkdown || "",
-      canonical_url: blogQuery.data.canonicalUrl || undefined,
+      contentMarkdown: blogQuery.data.contentMarkdown || "",
+      isRepublished: blogQuery.data.canonicalUrl
+        ? { originalArticleURL: blogQuery.data.canonicalUrl }
+        : undefined,
       tags,
-      published: true,
+      slug,
+      subtitle,
     };
 
     let postId, postUrl;
 
+    console.log({ type });
+
     if (type === "PUBLISH") {
-      const { id, url } = await client.publish(articleInput);
+      const { id, url } = await client.publish(username, articleInput);
       postId = id;
       postUrl = url;
     } else {
       if (!blogQuery.data.devToPostId || blogQuery.data.status !== "PUBLISHED") {
         return NextResponse.json(
-          { message: "Your blog has not been posted on Dev.to yet" },
+          { message: "Your blog has not been posted on HashNode yet" },
           { status: 403 }
         );
       }
-      const { id, url } = await client.republish(blogQuery.data.devToPostId, articleInput);
+      const { id, url } = await client.republish(
+        blogQuery.data.devToPostId,
+        username,
+        articleInput
+      );
       postId = id;
       postUrl = url;
     }
@@ -77,8 +86,10 @@ export async function POST(req: Request) {
     const publishingDetailsUpdate = await supabase.from("blog_publishing_details").upsert(
       {
         blogId: blogQuery.data.id,
-        devToTags: tags,
-        devToCoverImagePath: coverImagePath,
+        hashNodeCoverImagePath: coverImagePath,
+        hashNodeSlug: slug,
+        hashNodeSubtitle: subtitle,
+        hashNodeTags: tags,
       },
       { onConflict: "blogId" }
     );
@@ -90,8 +101,8 @@ export async function POST(req: Request) {
     const blogUpdate = await supabase
       .from("blogs")
       .update({
-        devToPostId: postId,
-        devToPostUrl: postUrl,
+        hashNodePostId: postId,
+        hashNodePostUrl: postUrl,
         status: "PUBLISHED",
         last_published_at: new Date().toISOString(),
       })
@@ -104,20 +115,18 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      message: `Successfully ${type === "PUBLISH" ? "published" : "republished"} on Dev.to`,
+      message: `Successfully ${type === "PUBLISH" ? "published" : "republished"} on HashNode`,
     });
-  } catch (err) {
-    if (err instanceof AxiosError) {
-      if (err.response?.status === 401) {
-        return NextResponse.json(
-          { message: "Your Dev.to account is not connected with PublishWise" },
-          { status: 401 }
-        );
-      }
+  } catch (err: any) {
+    if (err.status === 404) {
       return NextResponse.json(
-        { message: err.response?.data.error },
-        { status: err.response?.status || 500 }
+        {
+          message: "Your HashNode account is not connected with PublishWise",
+        },
+        { status: 401 }
       );
+    } else {
+      return NextResponse.json({ message: err.message || err.toString() }, { status: 500 });
     }
   }
 }

@@ -5,7 +5,7 @@ import Icon from "@/components/Icon";
 import { Button, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import Image from "next/image";
-import DevToPublishModal from "./Dev.to";
+import DevToPostModal from "./Dev.to";
 import HashNodePublishModal from "./Hashnode";
 import MediumPublishModal from "./Medium";
 
@@ -43,7 +43,7 @@ export default function PublishBlog() {
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
-      <DevToPublishModal opened={devToModalOpened} close={closeDevToModal} />
+      <DevToPostModal opened={devToModalOpened} close={closeDevToModal} />
       <HashNodePublishModal opened={hashNodeModalOpened} close={closeHashNodeModal} />
       <MediumPublishModal opened={mediumModalOpened} close={closeMediumModal} />
     </div>
